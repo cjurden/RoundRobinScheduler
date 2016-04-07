@@ -4,12 +4,24 @@
 #ifndef LIBPRIQUEUE_H_
 #define LIBPRIQUEUE_H_
 
-/**
-  Priqueue Data Structure
+/*
+* Priqueue Qnode Structure - an item in the queue.
+*/
+typedef struct _qnode_t
+{
+    void *item;                 //item containing data (in this case, will be a job struct).
+    struct qnode_t *next;       //next node in the queue.
+} qnode_t;
+
+/*
+* Priqueue Data Structure
 */
 typedef struct _priqueue_t
 {
-
+    int size;                                       //size of the queue.
+    int(*comp)(const void*,const void*);            //generic comparer function (dependent upon scheme used).
+    qnode_t *head;                                  //pointer to first element of the queue.
+    qnode_t *tail;                                  //pointer to last element of the queue
 } priqueue_t;
 
 
