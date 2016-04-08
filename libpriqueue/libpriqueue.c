@@ -178,14 +178,34 @@ int priqueue_remove(priqueue_t *q, void *ptr)
     }
 
     int num_removed = 0;
+    int counter = 0;
 
     qnode_t *cur = q->head;
     qnode_t *prev = NULL;
 
     while(cur != NULL){
+
         //check to see if data matches
-        //if so, free the memory and adjust queue
+        if( cur->item == ptr ){
+            qnode_t *tmp = cur->next;
+            //if we are NOT on the head element,
+            if(prev != NULL){
+                prev->next = tmp;
+            }
+            if(counter == 0){
+                q->head = tmp;
+            }
+            free(cur);
+            num_removed++;
+        }
+
+        prev = cur;
+        cur = cur->next;
+        counter++;
+
     }
+
+    return num_removed;
 }
 
 
@@ -200,6 +220,9 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
+    if(q->size == 0 || q->size < index+1){
+
+    }
 	return 0;
 }
 
