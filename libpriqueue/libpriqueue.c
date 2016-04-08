@@ -22,7 +22,6 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
     q->size=0;
     q->comp = comparer;
     q->head=NULL;
-    q->tail=NULL;
 }
 
 
@@ -47,10 +46,10 @@ int priqueue_offer(priqueue_t *q, void *ptr)
     */
     if(q->head==NULL){
         q->head= node;
-        q->tail= node;
         q->size++;
         return 0;
     }
+
     int count = 0;
     qnode_t *cur = q->head;
     qnode_t *prev = NULL;
@@ -83,7 +82,6 @@ int priqueue_offer(priqueue_t *q, void *ptr)
     * If this point is reached, node is to be inserted at the end of the queue.
     */
     prev->next = node;
-    q->tail = node;
     q->size++;
     return q->size-1;
 }
@@ -99,7 +97,10 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-	return NULL;
+    if(q->size == 0){
+        return NULL;
+    }
+    return q->head->item;
 }
 
 
@@ -113,7 +114,21 @@ void *priqueue_peek(priqueue_t *q)
  */
 void *priqueue_poll(priqueue_t *q)
 {
-	return NULL;
+    if(q->size == 0){
+        return NULL;
+    }
+
+    /*
+    * Save the job item from the head of the queue, and save the head's next item.
+    * dealloc the memory and set head to equal next item
+    */
+    void *job = q->head->item;
+    qnode_t *temp = q->head->next;
+    free(q->head);
+    q->head = temp;
+
+    q->size--;
+    return job;
 }
 
 
@@ -128,7 +143,22 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
-	return NULL;
+    /*
+    * Base case, queue is empty or index is out of range
+    */
+	if(q->size == 0 || q->size < index+1){
+        return NULL;
+    }
+
+    int counter = 0;
+    qnode_t *cur = q->head;
+
+    while(counter != index){
+        cur = cur->next;
+        counter++;
+    }
+
+    void *node = cur->item;
 }
 
 
@@ -143,7 +173,19 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-	return 0;
+    if(q->size == 0){
+        return 0;
+    }
+
+    int num_removed = 0;
+
+    qnode_t *cur = q->head;
+    qnode_t *prev = NULL;
+
+    while(cur != NULL){
+        //check to see if data matches
+        //if so, free the memory and adjust queue
+    }
 }
 
 
@@ -170,7 +212,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
  */
 int priqueue_size(priqueue_t *q)
 {
-	return 0;
+	return q->size;
 }
 
 

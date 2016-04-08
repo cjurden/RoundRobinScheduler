@@ -21,9 +21,7 @@ typedef struct _priqueue_t
     int size;                                       //size of the queue.
     int(*comp)(const void*,const void*);            //generic comparer function (dependent upon scheme used).
     qnode_t *head;                                  //pointer to first element of the queue.
-    qnode_t *tail;                                  //pointer to last element of the queue
-} priqueue_t;
-
+}
 
 void   priqueue_init     (priqueue_t *q, int(*comparer)(const void *, const void *));
 
