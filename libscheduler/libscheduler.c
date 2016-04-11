@@ -9,23 +9,6 @@
 #include "../libpriqueue/libpriqueue.h"
 
 
-/**
-  Stores information making up a job to be scheduled including any statistics.
-
-  You may need to define some global variables or a struct to store your job queue elements.
-*/
-typedef struct _job_t
-{
-  int pid;
-  int priority;
-  int run_time;
-  int arrival_time;
-  int started;
-  int finished;
-  int running_core;
-  int remaining_time; //used in preemption - keep track of when it stops
-} job_t;
-
 typedef bool CORE;
 int no_cores = 0;
 int total_jobs = 0;
@@ -35,11 +18,6 @@ float total_response = 0;
 scheme_t scheme = 0;
 priqueue_t * q;
 CORE * coreStatus; //t busy f idle
-
-// typedef struct _scheduler_t {
-//   //what calculation you need
-//   //
-// } scheduler_t;
 
 int compareArrival(const void* elem1, const void* elem2) {
   job_t* j1 = (job_t *)elem1;

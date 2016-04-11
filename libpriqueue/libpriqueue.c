@@ -221,8 +221,22 @@ int priqueue_remove(priqueue_t *q, void *ptr)
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
     if(q->size == 0 || q->size < index+1){
-
+        return NULL;
     }
+
+    int counter = 0;
+    qnode_t cur = q->head;
+    qnode_t prev = NULL;
+    while(counter < index){
+        prev = cur;
+        cur = cur->next;
+        counter++;
+    }
+    prev->next=cur;
+    void *item = cur->item;
+    free(cur);
+
+    return item;
 	return 0;
 }
 
@@ -246,5 +260,12 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-
+    qnode_t cur = q->head;
+    qnode_t tmp = NULL;
+    while(cur != NULL){
+        tmp = cur->next;
+        free(cur);
+        cur = tmp;
+    }
+    free(q);
 }
