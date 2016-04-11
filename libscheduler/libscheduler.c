@@ -58,6 +58,12 @@ int comparePriority(const void* elem1, const void* elem2) {
 int compareSJF(const void* elem1, const void* elem2){
   job_t* j1 = (job_t *)elem1;
   job_t* j2 = (job_t *)elem2;
+
+  if(elem1->run_time < elem2->run_time) {
+    return elem1;
+  } else {
+    return elem2;
+  }
 }
 
 int comparePSJF(const void* elem1, const void* elem2){
