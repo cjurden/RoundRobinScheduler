@@ -36,29 +36,38 @@ scheme_t scheme = 0;
 priqueue_t * q;
 CORE * coreStatus; //t busy f idle
 
-typedef struct _scheduler_t {
-  //what calculation you need
-  //
-} scheduler_t;
+// typedef struct _scheduler_t {
+//   //what calculation you need
+//   //
+// } scheduler_t;
 
 int compareArrival(const void* elem1, const void* elem2) {
+  job_t* j1 = (job_t *)elem1;
+  job_t* j2 = (job_t *)elem2;
 
+  return j1->arrival_time - j2->arrival_time;
 }
 
 int comparePriority(const void* elem1, const void* elem2) {
+  job_t* j1 = (job_t *)elem1;
+  job_t* j2 = (job_t *)elem2;
 
+  return j1->priority - j2->priority;
 }
 
 int compareSJF(const void* elem1, const void* elem2){
-
+  job_t* j1 = (job_t *)elem1;
+  job_t* j2 = (job_t *)elem2;
 }
 
 int comparePSJF(const void* elem1, const void* elem2){
-
+  job_t* j1 = (job_t *)elem1;
+  job_t* j2 = (job_t *)elem2;
 }
 
 int comparePPriority(const void* elem1, const void* elem2){
-
+  job_t* j1 = (job_t *)elem1;
+  job_t* j2 = (job_t *)elem2;
 }
 
 int compareRR(const void* elem1, const void* elem2) {
