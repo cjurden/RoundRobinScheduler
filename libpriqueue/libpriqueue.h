@@ -10,7 +10,7 @@
 typedef struct _qnode_t
 {
     void *item;                 //item containing data (in this case, will be a job struct).
-    struct qnode_t *next;       //next node in the queue.
+    struct _qnode_t *next;       //next node in the queue.
 } qnode_t;
 
 /*

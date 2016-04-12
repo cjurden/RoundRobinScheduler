@@ -37,7 +37,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
     /*
     * Create new qnode_t item and populate
     */
-    qnode_t *node = malloc(sizeof(qnode_t));
+    qnode_t *node = (qnode_t*)malloc(sizeof(qnode_t));
     node->item = ptr;
     node->next = NULL;
 
@@ -45,7 +45,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
     * Base Case: Queue is empty
     */
     if(q->head==NULL){
-        q->head= node;
+        q->head = node;
         q->size++;
         return 0;
     }
@@ -63,6 +63,8 @@ int priqueue_offer(priqueue_t *q, void *ptr)
             if(prev != NULL){
                 prev->next = node;
             }
+            node->next = cur;
+            q->size++;
             if(count == 0){
                 q->head = node;
             }
@@ -97,10 +99,11 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-    if(q->size == 0){
-        return NULL;
+    if(q->size != 0){
+        return q->head->item;
     }
-    return q->head->item;
+    return NULL;
+
 }
 
 
@@ -114,7 +117,7 @@ void *priqueue_peek(priqueue_t *q)
  */
 void *priqueue_poll(priqueue_t *q)
 {
-    if(q->size == 0){
+    if(q->head == NULL){
         return NULL;
     }
 
@@ -125,9 +128,10 @@ void *priqueue_poll(priqueue_t *q)
     void *job = q->head->item;
     qnode_t *temp = q->head->next;
     free(q->head);
+    q->size--;
     q->head = temp;
 
-    q->size--;
+
     return job;
 }
 
@@ -143,6 +147,7 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
+    printf("Entered priqueue_at");
     /*
     * Base case, queue is empty or index is out of range
     */
@@ -157,8 +162,7 @@ void *priqueue_at(priqueue_t *q, int index)
         cur = cur->next;
         counter++;
     }
-
-    void *node = cur->item;
+    return cur->item;
 }
 
 
@@ -204,7 +208,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
         counter++;
 
     }
-
+    q->size = q->size - num_removed;
     return num_removed;
 }
 
@@ -225,8 +229,8 @@ void *priqueue_remove_at(priqueue_t *q, int index)
     }
 
     int counter = 0;
-    qnode_t cur = q->head;
-    qnode_t prev = NULL;
+    qnode_t *cur = q->head;
+    qnode_t *prev = NULL;
     while(counter < index){
         prev = cur;
         cur = cur->next;
@@ -260,12 +264,12 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-    qnode_t cur = q->head;
-    qnode_t tmp = NULL;
+    qnode_t *cur = q->head;
+    qnode_t *tmp = NULL;
     while(cur != NULL){
         tmp = cur->next;
         free(cur);
         cur = tmp;
     }
-    free(q);
+    //free(q);
 }
