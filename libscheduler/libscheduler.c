@@ -20,46 +20,49 @@ priqueue_t * q;
 CORE * coreStatus; //t busy f idle
 struct scheduler_t s;
 
-int compareArrival(const void* elem1, const void* elem2) {
-  job_t* j1 = (job_t *)elem1;
-  job_t* j2 = (job_t *)elem2;
-
-  return j1->arrival_time - j2->arrival_time;
+int compareFCFS(const void *elem1, const void *elem2){
+    /*
+    * Always returns 0, because elements that have already
+    * arrived and are in the queue take priority over
+    * newly received jobs. This function will be used for
+    * both FCFS and RR, since RR is a FCFS scheme with a
+    * set execution quantum.
+    */
+    return 0;
 }
 
-int comparePriority(const void* elem1, const void* elem2) {
-  job_t* j1 = (job_t *)elem1;
-  job_t* j2 = (job_t *)elem2;
+int compareSJF(const void *elem1, const void *elem2){
+    job_t* j1 = (job_t *)elem1;
+    job_t* j2 = (job_t *)elem2;
 
-  return j1->priority - j2->priority;
-}
+    /*
+    * SJF scheme compares the remaining execution times
+    * of the two jobs. If they equal, we defer the comparison
+    * to the arrival times of each job.
+    */
 
-int compareSJF(const void* elem1, const void* elem2){
-  job_t* j1 = (job_t *)elem1;
-  job_t* j2 = (job_t *)elem2;
-
-  return elem1->run_time - elem2->run_time
-}
-
-int comparePSJF(const void* elem1, const void* elem2){
-  job_t* j1 = (job_t *)elem1;
-  job_t* j2 = (job_t *)elem2;
-
-  return j1->remaining_time - j2->remaining_time;
-}
-
-int comparePPriority(const void* elem1, const void* elem2){
-  job_t* j1 = (job_t *)elem1;
-  job_t* j2 = (job_t *)elem2;
-
-  if(comparePriority(elem1, elem2) == 0){
+    int val = j1->remaining_time - j2->remaining_time;
+    if(val != 0){
+        return val;
+    }
     return j1->arrival_time - j2->arrival_time;
-  }
-  return j1->priority-j2->priority;
 }
 
-int compareRR(const void* elem1, const void* elem2) {
-  return -1;
+int comparePriority(const void *elem1, const void *elem2){
+    job_t* j1 = (job_t *)elem1;
+    job_t* j2 = (job_t *)elem2;
+
+    /*
+    * PRI scheme compares the priorities of the two jobs.
+    * If they equal, we defer the comparison to the arrival
+    * times of each job.
+    */
+
+    int val = j1->priority - j2->priority;
+    if(val != 0){
+        return val;
+    }
+    return j1->arrival_time - j2->arrival_time;
 }
 
 /**
