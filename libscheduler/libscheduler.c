@@ -81,6 +81,21 @@ void scheduler_start_up(int cores, scheme_t scheme)
   for(int i = 0; i < s.cores; i++) {
     s.cores_availabile[i] = TRUE;
   }
+
+  switch(s.scheme)
+  {
+    case FCFS :
+      s.queue.queue_init(q, compareArrival);
+    case SJF  :
+      s.queue.queue_init(q, );
+    case PSJF :
+
+    case PRI  :
+
+    case PPRI :
+
+    case RR   :
+  }
 }
 
 
@@ -112,21 +127,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job.run_time = running_time;
   job.priority = priority;
 
-  switch(s.scheme)
-  {
-    case FCFS :
 
-    case SJF  :
-
-    case PSJF :
-
-    case PRI  :
-
-    case PPRI :
-
-    case RR   :
-
-  }
 	return -1;
 }
 
