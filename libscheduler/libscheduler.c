@@ -14,6 +14,36 @@
 float avgWaitTime, avgResponseTime, avgTurnaroundTie = 0.0;
 int completed_jobs = 0;
 
+/**
+  Stores information making up a job to be scheduled including any statistics.
+  You may need to define some global variables or a struct to store your job queue elements.
+*/
+typedef struct _job_t
+{
+  int pid;                // unique job identifier
+  int priority;           // job priority. 0 is highest.
+
+  int arrival_time;       //time job was received.
+  int remaining_time;     //will be initialized to job length, and will be possibly be updated when preemptive schemes are used.
+
+  int start_time;         //time job started executing
+  int finish_time;        //time job finished executing
+
+  int waiting_time;       //how long the job spends waiting in the queue until execution
+  int response_time;      //amount of time it takes from when a job was first submitted until the scheduler produces first response
+} job_t;
+
+
+/*
+* scheduler struct
+*/
+typedef struct _scheduler_t {
+    scheme_t scheme;        // scheme to be used (will decided comparator function)
+    priqueue_t queue;       // queue to hold jobs waiting
+    int cores;              // number of cores for the simlator
+    job_t** activeCores;    // job_t pointer array, with size == the number of cores specified.
+}
+
 /*
 * Scheme, queue and struct to be used within all scheduling functions.
 */
@@ -22,17 +52,25 @@ priqueue_t *q;
 scheduler_t *s;
 
 /*
+* TODO Time helper function
+*
+* updates reaminign time of every item in the core array
+* keeps track of last time time was updated
+*/
+
+/*
 * Comparator function definitions.
 */
+
+/*
+* GLOBAL COMPARER TO PASS TO QUEUE INIT BASED ON parameters
+*/
+
 int compareFCFS(const void *elem1, const void *elem2){
-    /*
-    * Always returns 0, because elements that have already
-    * arrived and are in the queue take priority over
-    * newly received jobs. This function will be used for
-    * both FCFS and RR, since RR is a FCFS scheme with a
-    * set execution quantum.
-    */
-    return 0;
+  job_t* j1 = (job_t *)elem1;
+  job_t* j2 = (job_t *)elem2;
+
+  return j1->arrival_time - j2->arrival_time;
 }
 
 int compareSJF(const void *elem1, const void *elem2){
@@ -45,7 +83,9 @@ int compareSJF(const void *elem1, const void *elem2){
     * to the arrival times of each job.
     */
 
-    int val = j1->remaining_time - j2->remaining_time;
+    //TODO make sure to check if job is running (if needed!!!)
+
+    int val = j1->running_time - j2->running_time;
     if(val != 0){
         return val;
     }
@@ -150,6 +190,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job.run_time = running_time;
   job.priority = priority;
 
+  //if open cores, put job in lowest core_di
+  //if no preemption, add to Queue
+  //handle preemption
+    //TODO HOW DO WE DO THIS
 
 	return -1;
 }
@@ -171,6 +215,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
+
+  //update global time variables
+  //free memory of core array
+  //schedule next job
 	return -1;
 }
 
@@ -190,6 +238,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
  */
 int scheduler_quantum_expired(int core_id, int time)
 {
+  //if no job waiting, return the current job id
+  //if job waiting,
 	return -1;
 }
 
