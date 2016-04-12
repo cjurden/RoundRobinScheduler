@@ -35,7 +35,7 @@ void  scheduler_show_queue             ();
 * Additional helper functions.
 */
 void  checkCores                       ();
-int   checkForPremption                (job_t* current, job_t* new, scheme_t scheme);
+bool  checkForPreemption                (scheme_t scheme, job_t* current, job_t* new);
 void  displayJobStats                  (job_t* job, int time);
 
 

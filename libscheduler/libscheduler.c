@@ -139,6 +139,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
     * Allocate memory for structure and initialize all variables.
     */
     s = malloc(sizeof(scheduler_t));
+    s->activeCores = malloc(sizeof(job_t*)*(s->cores));
     s->scheme = scheme;
     s->cores = cores;
 
@@ -163,15 +164,30 @@ void scheduler_start_up(int cores, scheme_t scheme)
   }//end switch
 
   /*
-  * Allocate memory for the activeCore array and
-  * and initialize all to NULL (i.e. no job running on them).
+  * initialize activeCores to NULL (i.e. no job running on them).
   */
-  s->activeCores = malloc(sizeof(job_t*)*(s->cores));
   int count;
   for(count = 0; count < s->cores; count++){
       s->activeCores[count] = NULL;
   }
 }//end scheduler start up
+
+/**
+  Called when we need to check for preemption on the active cores.
+
+  If the scheme is PSJF or PPRI, we need to check if the newly received job can
+  preempt any job currently executing on the active cores.
+
+  @param scheme the scheme_t for the scheduler
+  @param current the job currently running on the core
+  @param new the job that can potentially preempt the current
+
+  @return TRUE if we should preempt the current job
+  @return FALSE if we should NOT preempt the current job
+ */
+ bool checkForPreemption(scheme_t scheme, job_t* current, job_t* new){
+
+ }
 
 
 /**
@@ -219,31 +235,9 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             return count;
         }
         /*
-        * All cores are busy. Add the job to the queue to wait.
+        * All cores are busy. Check if we can/should preempt a job on a core
+        * given the scheme.
         */
-        if(s->scheme == PSJF){
-            /*
-            * Preemptive Shortest Job First
-            */
-            int count;
-            for(count = 0; count < s->cores; count++){
-                if(job.run_time < s->activeCores[count]->remaining_time){
-                    void *ptr = *(s->activeCores[count]);
-                    s->queue->priqueue_offer(s->queue,ptr);
-                }
-                
-            }
-        }
-        else if(s->scheme = PPRI){
-            /*
-            * We have a preemptive scheme, so we need to check and see if any active job
-            * can be preempted by the current job
-            */
-        }
-        s->queue->offer()
-
-
-
     }
 
 	return -1;
