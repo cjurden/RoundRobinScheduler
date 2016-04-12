@@ -8,18 +8,22 @@
 #include "libscheduler.h"
 #include "../libpriqueue/libpriqueue.h"
 
+/*
+* Global variables to handle wait, response and turnaround time.
+*/
+float avgWaitTime, avgResponseTime, avgTurnaroundTie = 0.0;
+int completed_jobs = 0;
 
-typedef bool CORE;
-int no_cores = 0;
-int total_jobs = 0;
-int total_waiting = 0;
-float total_turnaround = 0;
-float total_response = 0;
+/*
+* Scheme, queue and struct to be used within all scheduling functions.
+*/
 scheme_t scheme = 0;
-priqueue_t * q;
-CORE * coreStatus; //t busy f idle
-struct scheduler_t s;
+priqueue_t *q;
+scheduler_t *s;
 
+/*
+* Comparator function definitions.
+*/
 int compareFCFS(const void *elem1, const void *elem2){
     /*
     * Always returns 0, because elements that have already
@@ -79,27 +83,43 @@ int comparePriority(const void *elem1, const void *elem2){
 */
 void scheduler_start_up(int cores, scheme_t scheme)
 {
-  s.scheme = scheme;
-  s.cores = cores;
-  for(int i = 0; i < s.cores; i++) {
-    s.cores_availabile[i] = TRUE;
-  }
+    /*
+    * Allocate memory for structure and initialize all variables.
+    */
+    s = malloc(sizeof(scheduler_t));
+    s->scheme = scheme;
+    s->cores = cores;
 
-  switch(s.scheme)
-  {
+  /*
+  * Note here that FCFS and RR use same comparator, along within
+  * SJF and PSJF, and PRI and PPRI. The preemptive schemes
+  * will use an additional function on top of the comparator.
+  */
+  switch(s->scheme){
     case FCFS :
-      s.queue.queue_init(q, compareArrival);
+      s.queue.priqueue_init(q, compareFCFS);
     case SJF  :
-      s.queue.queue_init(q, );
+        s.queue.priqueue_init(q, compareSJF);
     case PSJF :
-
+        s.queue.priqueue_init(q, compareSJF);
     case PRI  :
-
+        s.queue.priqueue_init(q, comparePriority);
     case PPRI :
-
+        s.queue.priqueue_init(q, comparePriority);
     case RR   :
+        s.queue.priqueue_init(q, compareFCFS);
+  }//end switch
+
+  /*
+  * Allocate memory for the activeCore array and
+  * and initialize all to NULL (i.e. no job running on them).
+  */
+  s->activeCores = malloc(sizeof(job_t*)*(s->cores));
+  int count;
+  for(count = 0; count < s->cores; count++){
+      s->activeCores[count] = NULL;
   }
-}
+}//end scheduler start up
 
 
 /**
