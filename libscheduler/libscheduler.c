@@ -13,6 +13,9 @@
 */
 float avgWaitTime, avgResponseTime, avgTurnaroundTie = 0.0;
 int completed_jobs = 0;
+int last_time = 0;
+int no_cores_active = 0;
+int wait_time, response_time, turnaround_time = 0;
 
 /**
   Stores information making up a job to be scheduled including any statistics.
@@ -57,7 +60,16 @@ scheduler_t *s;
 * updates reaminign time of every item in the core array
 * keeps track of last time time was updated
 */
-
+void set_time(int time){
+  int diff = time - last_time;
+  for(int i = 0; i < no_cores_active; i ++) {
+    s->activeCores[i]->remaining_time = s->activeCores[i]->remaining_time - diff;
+    if(s->activeCores[i]->remaining_time <= 0) {
+      s->activeCores[i]->finish_time = time + s->activeCores[i]->remaining_time;
+    }
+  }
+  last_time = time;
+}
 /*
 * Comparator function definitions.
 */
