@@ -39,7 +39,7 @@ typedef struct _job_t
 */
 typedef struct _scheduler_t {
     scheme_t scheme;        // scheme to be used (will decided comparator function)
-    priqueue_t queue;       // queue to hold jobs waiting
+    priqueue_t *queue;       // queue to hold jobs waiting
     int cores;              // number of cores for the simlator
     job_t** activeCores;    // job_t pointer array, with size == the number of cores specified.
 }
@@ -137,17 +137,17 @@ void scheduler_start_up(int cores, scheme_t scheme)
   */
   switch(s->scheme){
     case FCFS :
-      s.queue.priqueue_init(q, compareFCFS);
+        s->queue->priqueue_init(q, compareFCFS);
     case SJF  :
-        s.queue.priqueue_init(q, compareSJF);
+        s->queue->priqueue_init(q, compareSJF);
     case PSJF :
-        s.queue.priqueue_init(q, compareSJF);
+        s->queue->priqueue_init(q, compareSJF);
     case PRI  :
-        s.queue.priqueue_init(q, comparePriority);
+        s->queue->priqueue_init(q, comparePriority);
     case PPRI :
-        s.queue.priqueue_init(q, comparePriority);
+        s->queue->priqueue_init(q, comparePriority);
     case RR   :
-        s.queue.priqueue_init(q, compareFCFS);
+        s->queue->priqueue_init(q, compareFCFS);
   }//end switch
 
   /*
@@ -194,6 +194,45 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   //if no preemption, add to Queue
   //handle preemption
     //TODO HOW DO WE DO THIS
+
+    int count;
+    for(count = 0; count < s->cores; count++){
+        /*
+        * iterate through cores and find the first available.
+        */
+        if(s->activeCores[count] == NULL){
+            s->activeCores[count] = job;
+            job.start_time = time;
+            no_cores_active++;
+            return count;
+        }
+        /*
+        * All cores are busy. Add the job to the queue to wait.
+        */
+        if(s->scheme == PSJF){
+            /*
+            * Preemptive Shortest Job First
+            */
+            int count;
+            for(count = 0; count < s->cores; count++){
+                if(job.run_time < s->activeCores[count]->remaining_time){
+                    void *ptr = *(s->activeCores[count]);
+                    s->queue->priqueue_offer(s->queue,ptr);
+                }
+                
+            }
+        }
+        else if(s->scheme = PPRI){
+            /*
+            * We have a preemptive scheme, so we need to check and see if any active job
+            * can be preempted by the current job
+            */
+        }
+        s->queue->offer()
+
+
+
+    }
 
 	return -1;
 }
