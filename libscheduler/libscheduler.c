@@ -18,6 +18,7 @@ float total_response = 0;
 scheme_t scheme = 0;
 priqueue_t * q;
 CORE * coreStatus; //t busy f idle
+struct scheduler_t s;
 
 int compareArrival(const void* elem1, const void* elem2) {
   job_t* j1 = (job_t *)elem1;
@@ -37,21 +38,24 @@ int compareSJF(const void* elem1, const void* elem2){
   job_t* j1 = (job_t *)elem1;
   job_t* j2 = (job_t *)elem2;
 
-  if(elem1->run_time < elem2->run_time) {
-    return elem1;
-  } else {
-    return elem2;
-  }
+  return elem1->run_time - elem2->run_time
 }
 
 int comparePSJF(const void* elem1, const void* elem2){
   job_t* j1 = (job_t *)elem1;
   job_t* j2 = (job_t *)elem2;
+
+  return j1->remaining_time - j2->remaining_time;
 }
 
 int comparePPriority(const void* elem1, const void* elem2){
   job_t* j1 = (job_t *)elem1;
   job_t* j2 = (job_t *)elem2;
+
+  if(comparePriority(elem1, elem2) == 0){
+    return j1->arrival_time - j2->arrival_time;
+  }
+  return j1->priority-j2->priority;
 }
 
 int compareRR(const void* elem1, const void* elem2) {
@@ -72,7 +76,11 @@ int compareRR(const void* elem1, const void* elem2) {
 */
 void scheduler_start_up(int cores, scheme_t scheme)
 {
-
+  s.scheme = scheme;
+  s.cores = cores;
+  for(int i = 0; i < s.cores; i++) {
+    s.cores_availabile[i] = TRUE;
+  }
 }
 
 
@@ -98,6 +106,27 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+  struct job_t job;
+  job.pid = job_number;
+  job.arrival_time = time;
+  job.run_time = running_time;
+  job.priority = priority;
+
+  switch(s.scheme)
+  {
+    case FCFS :
+
+    case SJF  :
+
+    case PSJF :
+
+    case PRI  :
+
+    case PPRI :
+
+    case RR   :
+
+  }
 	return -1;
 }
 

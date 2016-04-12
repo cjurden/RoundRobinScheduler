@@ -24,7 +24,6 @@ typedef struct _job_t
   int tunraround_time;    //amount of time to execute a particular job
 } job_t;
 
-} job_t;
 
 /*
 * scheduler struct
