@@ -65,7 +65,7 @@ int compareSJF(const void *elem1, const void *elem2){
     * of the two jobs. If they equal, we defer the comparison
     * to the arrival times of each job.
     */
-    int val = j1->running_time - j2->running_time;
+    int val = j1->remaining_time - j2->remaining_time;
     if(val != 0){
         return val;
     }
@@ -157,35 +157,35 @@ void scheduler_start_up(int cores, scheme_t scheme)
      if(scheme == PPRI){
          int prio = current->priority - new->priority;
          if(prio > 0){ //this means that the new job has higher prio
-             return true;
+             return TRUE;
          }
          if(prio < 0){ //this means that the current job has higher prio, should NOT preempt
-             return false;
+             return FALSE;
          }
          //if we get here, we know the jobs have equal prios. so we defer to arrival times
          int arrive = current->arrival_time - new->arrival_time;
          if(arrive > 0){ //this mean the new job arrived before current
-             return true;
+             return TRUE;
          }
          if(arrive <= 0){ //current job has earlier or equal arrival time, do NOT preempt
-             return false;
+             return FALSE;
          }
      }
      if(scheme == PSJF){
          int rem_time = current->remaining_time - new->remaining_time;
          if(rem_time > 0){ //this means that the new job has shorter remaining_time, preempt
-             return true;
+             return TRUE;
          }
          if(rem_time < 0){ //this means that the current job has shorter remaining time, should NOT preempt
-             return false;
+             return FALSE;
          }
          //if we get here, we know the jobs have equal prios. so we defer to arrival times
          int arrive = current->arrival_time - new->arrival_time;
          if(arrive > 0){ //this mean the new job arrived before current
-             return true;
+             return TRUE;
          }
          if(arrive <= 0){ //current job has earlier or equal arrival time, do NOT preempt
-             return false;
+             return TRUE;
          }
      }
  }
@@ -241,7 +241,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             */
             int count;
             for(count = 0; count < s->cores; count++){
-                if(checkForPreemption(s->scheme, s->activeCores[count],job)==TRUE){
+                if(checkForPreemption(s->scheme, s->activeCores[count],job) == TRUE){
                     /*
                     * so we need to preempt. remove current job and put it on
                     * the queue, replace with new.
