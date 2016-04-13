@@ -292,11 +292,11 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   //schedule next job
   set_time(time);
   completed_jobs++;
-  turnaround_time += time - s->activeCores[core_id]->arrival_time;
+  turnaround_time += (int)(time - s->activeCores[core_id]->arrival_time);
   //free(s->activeCores[core_id]);
   if(s->queue->head != NULL){
     job_t *tmp = (job_t *)(s->queue->head->item);
-    wait_time += tmp->waiting_time;
+    wait_time += (int)tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return tmp->pid;
   }
@@ -325,7 +325,7 @@ int scheduler_quantum_expired(int core_id, int time)
   if(s->queue->head != NULL) {
     priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
     job_t *tmp = (job_t *)(s->queue->head->item);
-    wait_time += tmp->waiting_time;
+    wait_time += (int)tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return s->activeCores[core_id]->pid;
   }
