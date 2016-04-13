@@ -4,7 +4,7 @@
 
 CC = gcc
 INC = -I.
-FLAGS = -Wall -Wextra -Werror -Wno-unused -g
+FLAGS = -Wall -Wextra -Wno-unused -g
 
 all: simulator queuetest #doc/html
 

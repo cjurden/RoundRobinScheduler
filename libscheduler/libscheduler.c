@@ -33,7 +33,7 @@ void set_time(int time){
     if(s->activeCores[i] != NULL){
       s->activeCores[i]->remaining_time -= (time - s->activeCores[i]->update_time);
       s->activeCores[i]->update_time = time;
-      printf("\n\nRemaining time for Job %d: %d\n", s->activeCores[i]->pid, s->activeCores[i]->remaining_time);
+      //printf("\n\nRemaining time for Job %d: %d\n", s->activeCores[i]->pid, s->activeCores[i]->remaining_time);
     }
   }
 }
@@ -138,7 +138,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
       s->activeCores[count] = NULL;
   }
 
-  printf("SUCCESS SCHEDULE STARTUP");
+  //printf("SUCCESS SCHEDULE STARTUP");
 }//end scheduler start up
 
 /**
@@ -214,7 +214,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-  printf("\n\nscheduling new job! number: %d\n\n", job_number);
+  //printf("\n\nscheduling new job! number: %d\n\n", job_number);
     job_t *job = malloc(sizeof(job_t));
     job->pid = job_number;
     job->arrival_time = time;
@@ -287,7 +287,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   /*
   * update global time variables, free memory of core array, schedule next job
   */
-  printf("\n\nSCHEDULER FINISHED. JOB_ID: %d\n\n", job_number);
+  //printf("\n\nSCHEDULER FINISHED. JOB_ID: %d\n\n", job_number);
   set_time(time);
 
   completed_jobs++;
@@ -298,7 +298,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   wait_time += s->activeCores[core_id]->waiting_time;
   response_time += s->activeCores[core_id]->response_time;
 
-  printf("\n\n[scheduler_job_finished] s->activeCores[%d]->waiting_time: %d\n\n",core_id, s->activeCores[core_id]->waiting_time);
+  //printf("\n\n[scheduler_job_finished] s->activeCores[%d]->waiting_time: %d\n\n",core_id, s->activeCores[core_id]->waiting_time);
 
   free(s->activeCores[core_id]);
 
@@ -381,7 +381,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-  printf("wait time: %d", wait_time);
+  fprintf(stderr, "wait time: %d", wait_time);
   avgWaitTime = (float) (wait_time / completed_jobs);
   return avgWaitTime;
 }
