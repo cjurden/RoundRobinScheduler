@@ -32,11 +32,11 @@ scheduler_t *s;
 * keeps track of last time time was updated
 */
 void set_time(int time){
-  for(int i = 0; i < s->cores; i ++) {
+  for(int i = 0; i < no_cores_active; i ++) {
     if(s->activeCores[i] != NULL){
-      s->activeCores[i]->remaining_time -= (time - s->activeCores[i]->update_time);
+      s->activeCores[i]->remaining_time -= time - s->activeCores[i]->update_time;
       s->activeCores[i]->update_time = time;
-      printf("remaining_time is now : %d", s->activeCores[i]->remaining_time);
+      printf("\n\nremaining_time is now : %d\n\n", s->activeCores[i]->remaining_time);
       /*
       if(s->activeCores[i]->remaining_time <= 0) {
         s->activeCores[i]->finish_time = time + s->activeCores[i]->remaining_time;
@@ -126,17 +126,17 @@ void scheduler_start_up(int cores, scheme_t scheme)
   */
   switch(s->scheme){
     case FCFS :
-        priqueue_init(&s->queue, compareFCFS);
+        priqueue_init(s->queue, compareFCFS);
     case SJF  :
-        priqueue_init(&s->queue, compareSJF);
+        priqueue_init(s->queue, compareSJF);
     case PSJF :
-        priqueue_init(&s->queue, compareSJF);
+        priqueue_init(s->queue, compareSJF);
     case PRI  :
-        priqueue_init(&s->queue, comparePriority);
+        priqueue_init(s->queue, comparePriority);
     case PPRI :
-        priqueue_init(&s->queue, comparePriority);
+        priqueue_init(s->queue, comparePriority);
     case RR   :
-        priqueue_init(&s->queue, compareRR);
+        priqueue_init(s->queue, compareRR);
   }//end switch
 
   /*
@@ -223,54 +223,59 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+  printf("\n\nscheduling new job! number: %d\n\n", job_number);
   set_time(time);
-  job_t *job = malloc(sizeof(job_t));
-  job->pid = job_number;
-  job->arrival_time = time;
-  job->remaining_time = running_time;
-  job->priority = priority;
-  job->update_time = time;
+  if(job_number == -1) {
+    return -1;
+  } else {
+    job_t *job = malloc(sizeof(job_t));
+    job->pid = job_number;
+    job->arrival_time = time;
+    job->remaining_time = running_time;
+    job->priority = priority;
+    job->update_time = time;
 
-    int count;
-    for(count = 0; count < s->cores; count++){
-        /*
-        * iterate through cores and find the first available.
-        */
-        if(s->activeCores[count] == NULL){
-            s->activeCores[count] = job;
-            job->start_time = time;
-            no_cores_active += 1;
-            return count;
-        }
-    }
-        /*
-        * All cores are busy. Check if we can/should preempt a job on a core
-        * given the scheme.
-        */
-        if(s->scheme == PSJF || s->scheme == PPRI){
-            /*
-            * we have a preemptive scheme. so we loop through the cores to
-            */
-            int count;
-            for(count = 0; count < s->cores; count++){
-                if(checkForPreemption(s->scheme, s->activeCores[count],job) == TRUE){
-                    /*
-                    * so we need to preempt. remove current job and put it on
-                    * the queue, replace with new.
-                    */
-                    priqueue_offer(&s->queue,&s->activeCores[count]);
-                    //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
-                    s->activeCores[count] = job;
-                    job->response_time = time; //Note that this might be weird
-                    return count;
-                }
-            }
-        }//end preemptive if check
-    /*
-    * If we get here, we either have nothing to preempt or all cores are busy.
-    * So, place the job on the queue.
-    */
-    priqueue_offer(&s->queue,job);
+      int count;
+      for(count = 0; count < s->cores; count++){
+          /*
+          * iterate through cores and find the first available.
+          */
+          if(s->activeCores[count] == NULL){
+              s->activeCores[count] = job;
+              job->start_time = time;
+              no_cores_active += 1;
+              return count;
+          }
+      }
+          /*
+          * All cores are busy. Check if we can/should preempt a job on a core
+          * given the scheme.
+          */
+          if(s->scheme == PSJF || s->scheme == PPRI){
+              /*
+              * we have a preemptive scheme. so we loop through the cores to
+              */
+              int count;
+              for(count = 0; count < s->cores; count++){
+                  if(checkForPreemption(s->scheme, s->activeCores[count],job) == TRUE){
+                      /*
+                      * so we need to preempt. remove current job and put it on
+                      * the queue, replace with new.
+                      */
+                      priqueue_offer(s->queue,s->activeCores[count]);
+                      //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
+                      s->activeCores[count] = job;
+                      job->response_time = time; //Note that this might be weird
+                      return count;
+                  }
+              }
+          }//end preemptive if check
+      /*
+      * If we get here, we either have nothing to preempt or all cores are busy.
+      * So, place the job on the queue.
+      */
+      priqueue_offer(s->queue,job);
+  }
     return -1;
 }
 
@@ -294,14 +299,15 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   //update global time variables
   //free memory of core array
   //schedule next job
+  printf("\n\nSCHEDULER FINISHED. JOB_ID: %d\n\n", job_number);
   set_time(time);
   completed_jobs++;
   turnaround_time += (int)(time - s->activeCores[core_id]->arrival_time);
-  free(s->activeCores[core_id]);
-  if(s->queue.head != NULL){
-    job_t *tmp = (job_t *)(&s->queue.head->item);
+  //free(s->activeCores[core_id]);
+  if(s->queue->head != NULL){
+    job_t *tmp = (job_t *)(s->queue->head->item);
     wait_time += (int)tmp->waiting_time;
-    s->activeCores[core_id] = (job_t *)priqueue_poll(&s->queue);
+    s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return tmp->pid;
   }
 	return -1;
@@ -326,14 +332,14 @@ int scheduler_quantum_expired(int core_id, int time)
   //if no job waiting, return the current job id
   //if job waiting,
   set_time(time);
-  if(s->queue.head == NULL) {
+  if(s->queue->head == NULL) {
     return(s->activeCores[core_id]->pid);
   }
-  if(s->queue.head != NULL) {
-    priqueue_offer(&s->queue, (void *)&s->activeCores[core_id]);
-    job_t *tmp = (job_t *)(&s->queue.head->item);
+  if(s->queue->head != NULL) {
+    priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
+    job_t *tmp = (job_t *)(s->queue->head->item);
     wait_time += (int)tmp->waiting_time;
-    s->activeCores[core_id] = (job_t *)priqueue_poll(&s->queue);
+    s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return s->activeCores[core_id]->pid;
   }
 	return -1;
@@ -390,12 +396,12 @@ float scheduler_average_response_time()
 void scheduler_clean_up()
 {
 
-  if(&s->queue.head != NULL){
-    qnode_t *tmp = (qnode_t *)(&s->queue.head);
+  if(s->queue->head != NULL){
+    qnode_t *tmp = (qnode_t *)(s->queue->head);
     qnode_t *temp = tmp->next;
     while(tmp->next != NULL) {
-      free(&s->queue.head->item);
-      s->queue.head->item = temp;
+      free(s->queue->head->item);
+      s->queue->head->item = temp;
       qnode_t *temp = tmp->next;
     }
     free(tmp);
@@ -427,14 +433,14 @@ void scheduler_clean_up()
 void scheduler_show_queue()
 {
   /*
-    job_t *tmp = (job_t *)s->queue.head->item;
-  if(s->queue.head->item == NULL){
+    job_t *tmp = (job_t *)s->queue->head->item;
+  if(s->queue->head->item == NULL){
     printf("queue empty");
-  } else if (s->queue.head->next == NULL) {
+  } else if (s->queue->head->next == NULL) {
     printf("queue head only, id: %d", tmp->pid);
   } else {
     printf("queue head, id: %d", tmp->pid);
-    qnode_t *temp = s->queue.head->next;
+    qnode_t *temp = s->queue->head->next;
     while(temp != NULL) {
         job_t *node = (job_t *)temp->item;
       printf("next item, id: %d", node->pid);
