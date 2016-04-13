@@ -235,7 +235,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         if(s->activeCores[count] == NULL){
             s->activeCores[count] = job;
             job->start_time = time;
-            no_cores_active++;
+            no_cores_active += 1;
             return count;
         }
     }
