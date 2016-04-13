@@ -94,9 +94,6 @@ int compareSJF(const void *elem1, const void *elem2){
     * of the two jobs. If they equal, we defer the comparison
     * to the arrival times of each job.
     */
-
-    //TODO make sure to check if job is running (if needed!!!)
-
     int val = j1->running_time - j2->running_time;
     if(val != 0){
         return val;
@@ -186,7 +183,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
   @return FALSE if we should NOT preempt the current job
  */
  bool checkForPreemption(scheme_t scheme, job_t* current, job_t* new){
-     if(scheme = PPRI){
+     if(scheme == PPRI){
          int prio = current->priority - new->priority;
          if(prio > 0){ //this means that the new job has higher prio
              return true;
@@ -203,7 +200,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
              return false;
          }
      }
-     if(scheme = PSJF){
+     if(scheme == PSJF){
          int rem_time = current->remaining_time - new->remaining_time;
          if(rem_time > 0){ //this means that the new job has shorter remaining_time, preempt
              return true;
@@ -400,7 +397,6 @@ float scheduler_average_response_time()
 
 /**
   Free any memory associated with your scheduler.
-
   Assumptions:
     - This function will be the last function called in your library.
 */
@@ -414,7 +410,10 @@ void scheduler_clean_up()
   This function may print out any debugging information you choose. This
   function will be called by the simulator after every call the simulator
   makes to your scheduler.
-  In our provided output, we have implemented this function to list the jobs in the order they are to be scheduled. Furthermore, we have also listed the current state of the job (either running on a given core or idle). For example, if we have a non-preemptive algorithm and job(id=4) has began running, job(id=2) arrives with a higher priority, and job(id=1) arrives with a lower priority, the output in our sample output will be:
+  In our provided output, we have implemented this function to list the jobs in the order they are to be scheduled.
+  Furthermore, we have also listed the current state of the job (either running on a given core or idle).
+  For example, if we have a non-preemptive algorithm and job(id=4) has began running, job(id=2) arrives with a higher priority,
+  and job(id=1) arrives with a lower priority, the output in our sample output will be:
 
     2(-1) 4(0) 1(-1)
 
