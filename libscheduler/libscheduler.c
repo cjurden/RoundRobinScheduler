@@ -11,9 +11,10 @@
 /*
 * Global variables to handle wait, response and turnaround time.
 */
-float avgWaitTime, avgResponseTime, avgTurnaroundTie = 0.0;
+float avgWaitTime, avgResponseTime, avgTurnaroundTime = 0.0;
 int completed_jobs = 0;
-//int last_time = 0;
+
+int last_time = 0;
 int no_cores_active = 0;
 int wait_time, response_time, turnaround_time = 0;
 
@@ -22,32 +23,21 @@ int wait_time, response_time, turnaround_time = 0;
 * Scheme, queue and struct to be used within all scheduling functions.
 */
 scheme_t scheme = 0;
-priqueue_t *q;
 scheduler_t *s;
 
 /*
-* TODO Time helper function
-*
 * updates reaminign time of every item in the core array
 * keeps track of last time time was updated
 */
 void set_time(int time){
-  for(int i = 0; i < no_cores_active; i ++) {
+  for(int i = 0; i < s->cores; i ++) {
     if(s->activeCores[i] != NULL){
-      s->activeCores[i]->remaining_time -= time - s->activeCores[i]->update_time;
+      s->activeCores[i]->remaining_time -= (time - s->activeCores[i]->update_time);
       s->activeCores[i]->update_time = time;
-      printf("\n\nremaining_time is now : %d\n\n", s->activeCores[i]->remaining_time);
-      /*
-      if(s->activeCores[i]->remaining_time <= 0) {
-        s->activeCores[i]->finish_time = time + s->activeCores[i]->remaining_time;
-    }
-    */
+      printf("\n\nRemaining time for Job %d: %d\n", s->activeCores[i]->pid, s->activeCores[i]->remaining_time);
     }
   }
 }
-/*
-* Comparator function definitions.
-*/
 
 /*
 * GLOBAL COMPARER TO PASS TO QUEUE INIT BASED ON parameters
@@ -57,7 +47,7 @@ int compareFCFS(const void *elem1, const void *elem2){
   job_t* j1 = (job_t *)elem1;
   job_t* j2 = (job_t *)elem2;
 
-  return j1->arrival_time - j2->arrival_time;
+  return 0;
 }
 
 int compareSJF(const void *elem1, const void *elem2){
@@ -94,7 +84,9 @@ int comparePriority(const void *elem1, const void *elem2){
 }
 
 int compareRR(const void *elem1, const void *elem2){
-  return -1;
+    void *ptr = &elem1;
+    ptr = &elem2;
+  return 0;
 }
 
 /**
@@ -224,17 +216,13 @@ void scheduler_start_up(int cores, scheme_t scheme)
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
   printf("\n\nscheduling new job! number: %d\n\n", job_number);
-  set_time(time);
-  if(job_number == -1) {
-    return -1;
-  } else {
     job_t *job = malloc(sizeof(job_t));
     job->pid = job_number;
     job->arrival_time = time;
     job->remaining_time = running_time;
     job->priority = priority;
     job->update_time = time;
-
+    set_time(time);
       int count;
       for(count = 0; count < s->cores; count++){
           /*
@@ -275,7 +263,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       * So, place the job on the queue.
       */
       priqueue_offer(&s->queue,job);
-  }
     return -1;
 }
 
@@ -296,20 +283,26 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
-  //update global time variables
-  //free memory of core array
-  //schedule next job
+  /*
+  * update global time variables, free memory of core array, schedule next job
+  */
   printf("\n\nSCHEDULER FINISHED. JOB_ID: %d\n\n", job_number);
   set_time(time);
   completed_jobs++;
   turnaround_time += (int)(time - s->activeCores[core_id]->arrival_time);
-  //free(s->activeCores[core_id]);
+
+  free(s->activeCores[core_id]);
+
+  //check to see if another job is ready to hop on the core
   if(s->queue.head != NULL){
-    job_t *tmp = (job_t *)(&s->queue.head->item);
-    wait_time += (int)tmp->waiting_time;
-    s->activeCores[core_id] = (job_t *)priqueue_poll(&s->queue);
-    return (int)tmp->pid;
+      s->activeCores[core_id] = priqueue_poll(&s->queue);
+      s->activeCores[core_id]->waiting_time += (time - s->activeCores[core_id]->update_time);
+      s->activeCores[core_id]->update_time = time;
+      return s->activeCores[core_id]->pid;
   }
+
+  //queue is empty, core should remain idle.
+  s->activeCores[core_id]=NULL;
 	return -1;
 }
 
@@ -329,9 +322,39 @@ int scheduler_job_finished(int core_id, int job_number, int time)
  */
 int scheduler_quantum_expired(int core_id, int time)
 {
-  //if no job waiting, return the current job id
-  //if job waiting,
-  set_time(time);
+    /*
+    * update the remaining time for the job currently running on the core
+    */
+    s->activeCores[core_id]->remaining_time -= time - s->activeCores[core_id]->update_time;
+    s->activeCores[core_id]->update_time = time;
+
+    /*
+    * See if that job has completed running. If so, free it
+    */
+    if(s->activeCores[core_id]->remaining_time <= 0){
+        //set_time(time); here
+        free(s->activeCores[core_id]);
+        s->activeCores[core_id] = NULL;
+    }
+    else{
+        priqueue_offer(&s->queue, s->activeCores[core_id]);
+        s->activeCores[core_id] = NULL;
+    }
+
+    //if no job waiting, return the current job id
+    //if job waiting,
+    if(priqueue_size(&s->queue) != 0){
+        job_t *new = priqueue_poll(&s->queue);
+        new->waiting_time += time - new->update_time;
+
+        //do some work with time_responded to here
+
+        return new->pid;
+    }
+    return -1;
+
+    /*
+        //set_time(time);
   if(s->queue.head == NULL) {
     return((int)s->activeCores[core_id]->pid);
   }
@@ -343,6 +366,8 @@ int scheduler_quantum_expired(int core_id, int time)
     return (int)s->activeCores[core_id]->pid;
   }
 	return -1;
+
+    */
 }
 
 
@@ -355,6 +380,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
+    return avgWaitTime;
   avgWaitTime = (float) (wait_time / completed_jobs);
 	return 0.0;
 }
@@ -369,8 +395,9 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-  avgTurnaroundTie = (float)(turnaround_time / completed_jobs);
-	return 0.0;
+    return avgTurnaroundTime;
+  //avgTurnaroundTie = (float)(turnaround_time / completed_jobs);
+	//return 0.0;
 }
 
 
@@ -383,6 +410,7 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
+    return avgResponseTime;
   avgResponseTime = (float)(response_time / completed_jobs);
 	return 0.0;
 }
@@ -395,7 +423,11 @@ float scheduler_average_response_time()
 */
 void scheduler_clean_up()
 {
+    priqueue_destroy(&s->queue);
+    free(s->activeCores);
+    free(s);
 
+    /*
   if(s->queue.head != NULL){
     qnode_t *tmp = (qnode_t *)(&s->queue.head);
     qnode_t *temp = tmp->next;
@@ -413,6 +445,7 @@ void scheduler_clean_up()
     i++;
   }
   free(s);
+  */
 }
 
 
@@ -432,20 +465,25 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
-  /*
-    job_t *tmp = (job_t *)s->queue.head->item;
-  if(s->queue.head->item == NULL){
-    printf("queue empty");
-  } else if (s->queue.head->next == NULL) {
-    printf("queue head only, id: %d", tmp->pid);
-  } else {
-    printf("queue head, id: %d", tmp->pid);
-    qnode_t *temp = s->queue.head->next;
-    while(temp != NULL) {
-        job_t *node = (job_t *)temp->item;
-      printf("next item, id: %d", node->pid);
-      temp = temp->next;
+    qnode_t *current = s->queue.head;
+    int pid;
+    int prio;
+    int time_rem;
+
+    /*
+    * Iterate through the queue printing either Prio or Time remaining
+    */
+    int i = 0;
+    for(i; i<s->queue.size; i++){
+        pid = ((job_t *)current->item)->pid;
+        if(s->scheme == SJF || s->scheme == PSJF){
+            time_rem = ((job_t *)current->item)->remaining_time;
+            printf("PID: %d | TIME_REM: %d ",pid,time_rem);
+        }
+        else{
+            prio = ((job_t *)current->item)->priority;
+            printf("PID: %d | PRIO: %d ",pid,prio);
+        }
+        current = current->next;
     }
-  }
-  */
 }
