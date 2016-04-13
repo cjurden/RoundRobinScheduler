@@ -89,6 +89,10 @@ int comparePriority(const void *elem1, const void *elem2){
     return j1->arrival_time - j2->arrival_time;
 }
 
+int compareRR(const void *elem1, const void *elem2){
+  return -1;
+}
+
 /**
   Initalizes the scheduler.
 
@@ -318,7 +322,7 @@ int scheduler_quantum_expired(int core_id, int time)
   //if no job waiting, return the current job id
   //if job waiting,
   set_time(time);
-  if(s->queue->head->item != NULL) {
+  if(s->queue->head != NULL) {
     priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
     job_t *tmp = (job_t *)(s->queue->head->item);
     wait_time += tmp->waiting_time;

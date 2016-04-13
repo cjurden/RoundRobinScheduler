@@ -49,6 +49,7 @@ typedef struct _scheduler_t {
 int   compareFCFS                      (const void *elem1, const void *elem2);
 int   compareSJF                       (const void* elem1, const void* elem2);
 int   comparePriority                  (const void* elem1, const void* elem2);
+int   compareRR                        (const void* elem1, const void* elem2);
 
 /*
 * Pre-defined functions.
