@@ -10,6 +10,8 @@
 */
 typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;
 
+typedef enum {FALSE = 0, TRUE} bool;
+
 /**
   Stores information making up a job to be scheduled including any statistics.
   You may need to define some global variables or a struct to store your job queue elements.
@@ -38,7 +40,7 @@ typedef struct _scheduler_t {
     priqueue_t *queue;       // queue to hold jobs waiting
     int cores;              // number of cores for the simlator
     job_t** activeCores;    // job_t pointer array, with size == the number of cores specified.
-}
+} scheduler_t;
 
 
 /*
