@@ -369,7 +369,7 @@ int scheduler_quantum_expired(int core_id, int time)
           response_time += s->activeCores[core_id]->response_time;
 
           //set_time(time);
-          s->activeCores[core_id] = NULL;
+          //s->activeCores[core_id] = NULL;
       }
       else if (priqueue_size(&s->queue) == 0) {
         return s->activeCores[core_id]->pid;
