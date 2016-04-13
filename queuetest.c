@@ -18,13 +18,14 @@ int compare2(const void * a, const void * b)
 
 int main()
 {
-	priqueue_t q, q2;
+	priqueue_t q;
+	priqueue_t q2;
 
 	priqueue_init(&q, compare1);
 	priqueue_init(&q2, compare2);
 
 	/* Pupulate some data... */
-	int *values = malloc(100 * sizeof(int));
+	int *values = malloc(200 * sizeof(int));
 
 	int i;
 	for (i = 0; i < 100; i++)
@@ -65,7 +66,7 @@ int main()
 		printf("%d ", *((int *)priqueue_at(&q2, i)) );
 	printf("\n");
 
-	priqueue_destroy(&q2);
+	//priqueue_destroy(&q2);
 	priqueue_destroy(&q);
 
 	free(values);
