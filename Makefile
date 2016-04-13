@@ -2,9 +2,10 @@
 # EECS 678
 #
 
-CC = gcc
+CC = gcc -std=gnu11
 INC = -I.
-FLAGS = -Wall -Wextra -Wno-unused -g
+FLAGS = -Wall -Wextra -Werror -Wno-unused #-Og -g
+
 
 all: simulator queuetest #doc/html
 

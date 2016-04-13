@@ -1,0 +1,107 @@
+
+examples.pl,0
+
+libpriqueue/libpriqueue.h,675
+#define LIBPRIQUEUE_H_LIBPRIQUEUE_H_5,56
+typedef struct _qnode_t_qnode_t10,142
+    void *item;                 //item containing data (in this case, will be a job struct).item12,170
+    struct _qnode_t *next;       //next node in the queue.next13,264
+} qnode_t;qnode_t14,324
+typedef struct _priqueue_t_priqueue_t19,373
+    int size;                                       //size of the queue.size21,404
+    int(*comp)(const void*,const void*);            //generic comparer function (dependent upon scheme used).comp22,478
+    qnode_t *head;                                  //pointer to first element of the queue.head23,589
+} priqueue_t;priqueue_t24,683
+
+libpriqueue/libpriqueue.c,617
+void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))priqueue_init20,535
+int priqueue_offer(priqueue_t *q, void *ptr)priqueue_offer36,1078
+void *priqueue_peek(priqueue_t *q)priqueue_peek102,2706
+void *priqueue_poll(priqueue_t *q)priqueue_poll121,3095
+void *priqueue_at(priqueue_t *q, int index)priqueue_at152,3890
+int priqueue_remove(priqueue_t *q, void *ptr)priqueue_remove182,4644
+void *priqueue_remove_at(priqueue_t *q, int index)priqueue_remove_at230,5785
+int priqueue_size(priqueue_t *q)priqueue_size260,6415
+void priqueue_destroy(priqueue_t *q)priqueue_destroy271,6615
+
+libscheduler/libscheduler.h,2062
+#define LIBSCHEDULER_H_LIBSCHEDULER_H_5,97
+typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;FCFS11,199
+typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;SJF11,199
+typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;PSJF11,199
+typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;PRI11,199
+typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;PPRI11,199
+typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;RR11,199
+typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;scheme_t11,199
+typedef enum {FALSE = 0, TRUE} bool;FALSE13,262
+typedef enum {FALSE = 0, TRUE} bool;TRUE13,262
+typedef enum {FALSE = 0, TRUE} bool;bool13,262
+typedef struct _job_t_job_t19,485
+  int pid;                // unique job identifierpid21,511
+  int priority;           // job priority. 0 is highest.priority22,563
+  int arrival_time;       //time job was received.arrival_time24,623
+  int remaining_time;     //will be initialized to job length, and will be possibly be updated when preemptive schemes are used.remaining_time25,675
+  int start_time;         //time job started executingstart_time27,807
+  int finish_time;        //time job finished executingfinish_time28,863
+  int waiting_time;       //how long the job spends waiting in the queue until executionwaiting_time30,922
+  int response_time;      //amount of time it takes from when a job was first submitted until the scheduler produces first responseresponse_time31,1012
+  int update_time;  //keeps track of the last time job was updatedupdate_time33,1147
+} job_t;job_t34,1215
+typedef struct _scheduler_t {_scheduler_t40,1257
+    scheme_t scheme;        // scheme to be used (will decided comparator function)scheme41,1288
+    priqueue_t queue;       // queue to hold jobs waitingqueue42,1373
+    int cores;              // number of cores for the simlatorcores43,1432
+    job_t** activeCores;    // job_t pointer array, with size == the number of cores specified.activeCores44,1497
+} scheduler_t;scheduler_t45,1594
+
+libscheduler/libscheduler.c,1851
+float avgWaitTime = 0, avgResponseTime = 0, avgTurnaroundTime = 0.0;avgWaitTime14,241
+float avgWaitTime = 0, avgResponseTime = 0, avgTurnaroundTime = 0.0;avgResponseTime14,241
+float avgWaitTime = 0, avgResponseTime = 0, avgTurnaroundTime = 0.0;avgTurnaroundTime14,241
+int no_cores_active = 0;no_cores_active17,335
+int wait_time = 0, response_time = 0, turnaround_time = 0;wait_time18,361
+int wait_time = 0, response_time = 0, turnaround_time = 0;response_time18,361
+int wait_time = 0, response_time = 0, turnaround_time = 0;turnaround_time18,361
+int completed_jobs = 0;completed_jobs19,421
+scheme_t scheme = 0;scheme24,528
+scheduler_t *s = NULL;s25,550
+void set_time(int time){set_time31,687
+int compareFCFS(const void *elem1, const void *elem2){compareFCFS45,1121
+int compareSJF(const void *elem1, const void *elem2){compareSJF52,1293
+int comparePriority(const void *elem1, const void *elem2){comparePriority68,1750
+int compareRR(const void *elem1, const void *elem2){compareRR85,2187
+void scheduler_start_up(int cores, scheme_t scheme)scheduler_start_up103,2891
+ bool checkForPreemption(scheme_t scheme, job_t* current, job_t* new){checkForPreemption157,4562
+int scheduler_new_job(int job_number, int time, int running_time, int priority)scheduler_new_job215,7102
+int scheduler_job_finished(int core_id, int job_number, int time)scheduler_job_finished285,9780
+int scheduler_quantum_expired(int core_id, int time)scheduler_quantum_expired333,11641
+float scheduler_average_waiting_time()scheduler_average_waiting_time382,13366
+float scheduler_average_turnaround_time()scheduler_average_turnaround_time397,13854
+float scheduler_average_response_time()scheduler_average_response_time411,14319
+void scheduler_clean_up()scheduler_clean_up423,14605
+void scheduler_show_queue()scheduler_show_queue445,15485
+
+queuetest.c,144
+int compare1(const void * a, const void * b)compare19,113
+int compare2(const void * a, const void * b)compare214,201
+int main()main19,289
+
+simulator.c,827
+typedef struct _simulator_job_list_t_simulator_job_list_t10,150
+	int job_id, arrival_time, run_time, priority;job_id12,191
+	int job_id, arrival_time, run_time, priority;arrival_time12,191
+	int job_id, arrival_time, run_time, priority;run_time12,191
+	int job_id, arrival_time, run_time, priority;priority12,191
+	int core_id, arrived;core_id13,239
+	int core_id, arrived;arrived13,239
+} simulator_job_list_t;simulator_job_list_t14,263
+void print_usage(char *program_name)print_usage16,290
+int set_active_job(int job_id, int core_id, simulator_job_list_t *jobs, int active_jobs)set_active_job24,605
+void print_available_jobs(simulator_job_list_t *jobs, int active_jobs)print_available_jobs39,877
+void print_available_cores(int cores)print_available_cores62,1245
+int main(int argc, char **argv)main77,1452
+
+Makefile,103
+CC = gcc -std=gnu11CC5,20
+INC = -I.INC6,41
+FLAGS = -Wall -Wextra -Werror -Wno-unused -gFLAGS7,52
