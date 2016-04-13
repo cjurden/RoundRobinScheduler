@@ -287,8 +287,9 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   completed_jobs++;
   turnaround_time += time - s->activeCores[core_id]->arrival_time;
   free(s->activeCores[core_id]);
-  if(s->queue->head->item->item!=NULL){
-    wait_time += s->queue->head->item->waiting_time;
+  if(s->queue->head->item != NULL){
+    job_t *tmp = (job_t *)(s->queue->head->item);
+    wait_time += tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return s->activeCores[core_id]->job_id;
   }
@@ -314,9 +315,10 @@ int scheduler_quantum_expired(int core_id, int time)
   //if no job waiting, return the current job id
   //if job waiting,
   set_time(time);
-  if(s->queue->head->item->item != NULL) {
+  if(s->queue->head->item != NULL) {
     priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
-    wait_time += s->queue->head->item->wait_time;
+    job_t *tmp = (job_t *)(s->queue->head->item);
+    wait_time += tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return s->activeCores[core_id]->job_id;
   }
@@ -375,7 +377,8 @@ void scheduler_clean_up()
 {
   if(s->queue->head->item != NULL){
     while(s->queue->next != NULL) {
-      struct job_t *temp = (job_t *)s->queue->head->item->next;
+      job_t *tmp = (job_t *)(s->queue->head->item);
+      job_t *temp = tmp->next;
       free(s->queue->head->item);
       s->queue->head->item = temp;
     }
@@ -405,15 +408,16 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
+    job_t *tmp = (job_t *)s->queue->head->item;
   if(s->queue->head->item == NULL){
     printf("queue empty");
   } else if (s->queue->head->next == NULL) {
-    printf("queue head only, id: %d", s->queue->head->item->job_id);
+    printf("queue head only, id: %d", tmp->pid);
   } else {
-    printf("queue head, id: %d", s->queue->head->item->job_id);
-    struct job_t *temp = s->queue->head->next;
+    printf("queue head, id: %d", tmp->pid);
+    qnode_t *temp = s->queue->head->next;
     while(temp != NULL) {
-      printf("next item, id: ", temp->job_id);
+      printf("next item, id: ", (job_t *)temp->item->pid);
       temp = temp->next;
     }
   }
