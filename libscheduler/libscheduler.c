@@ -188,6 +188,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
              return TRUE;
          }
      }
+     return FALSE;
  }
 
 /**
@@ -291,7 +292,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
     job_t *tmp = (job_t *)(s->queue->head->item);
     wait_time += tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
-    return s->activeCores[core_id]->job_id;
+    return job_number;
   }
 	return -1;
 }
@@ -320,7 +321,7 @@ int scheduler_quantum_expired(int core_id, int time)
     job_t *tmp = (job_t *)(s->queue->head->item);
     wait_time += tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
-    return s->activeCores[core_id]->job_id;
+    return s->activeCores[core_id]->pid;
   }
 	return -1;
 }
@@ -375,17 +376,21 @@ float scheduler_average_response_time()
 */
 void scheduler_clean_up()
 {
-  if(s->queue->head->item != NULL){
-    while(s->queue->next != NULL) {
-      job_t *tmp = (job_t *)(s->queue->head->item);
-      job_t *temp = tmp->next;
+
+  if(s->queue->head != NULL){
+    qnode_t *tmp = (qnode_t *)(s->queue->head);
+    qnode_t *temp = tmp->next;
+    while(tmp->next != NULL) {
       free(s->queue->head->item);
       s->queue->head->item = temp;
+      qnode_t *temp = tmp->next;
     }
+    free(tmp);
+    free(temp);
   }
   int i = 0;
-  while(s->queue->activeCores[i] != NULL){
-    free(s->queue->activeCores[i]);
+  while(s->activeCores[i] != NULL){
+    free(s->activeCores[i]);
     i++;
   }
   free(s);
@@ -417,7 +422,8 @@ void scheduler_show_queue()
     printf("queue head, id: %d", tmp->pid);
     qnode_t *temp = s->queue->head->next;
     while(temp != NULL) {
-      printf("next item, id: ", (job_t *)temp->item->pid);
+        job_t *node = (job_t *)temp->item;
+      printf("next item, id: %d", node->pid);
       temp = temp->next;
     }
   }
