@@ -304,8 +304,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   completed_jobs++;
   turnaround_time += (int)(time - s->activeCores[core_id]->arrival_time);
   //free(s->activeCores[core_id]);
-  if(s->queue->head != NULL){
-    job_t *tmp = (job_t *)(s->queue->head->item);
+  if(s->queue.head != NULL){
+    job_t *tmp = (job_t *)(&s->queue.head->item);
     wait_time += (int)tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return tmp->pid;
@@ -332,12 +332,12 @@ int scheduler_quantum_expired(int core_id, int time)
   //if no job waiting, return the current job id
   //if job waiting,
   set_time(time);
-  if(s->queue->head == NULL) {
+  if(s->queue.head == NULL) {
     return(s->activeCores[core_id]->pid);
   }
-  if(s->queue->head != NULL) {
+  if(s->queue.head != NULL) {
     priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
-    job_t *tmp = (job_t *)(s->queue->head->item);
+    job_t *tmp = (job_t *)(&s->queue.head->item);
     wait_time += (int)tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return s->activeCores[core_id]->pid;
@@ -396,12 +396,12 @@ float scheduler_average_response_time()
 void scheduler_clean_up()
 {
 
-  if(s->queue->head != NULL){
-    qnode_t *tmp = (qnode_t *)(s->queue->head);
+  if(s->queue.head != NULL){
+    qnode_t *tmp = (qnode_t *)(&s->queue.head);
     qnode_t *temp = tmp->next;
     while(tmp->next != NULL) {
-      free(s->queue->head->item);
-      s->queue->head->item = temp;
+      free(&s->queue.head->item);
+      &s->queue.head->item = temp;
       qnode_t *temp = tmp->next;
     }
     free(tmp);
@@ -433,14 +433,14 @@ void scheduler_clean_up()
 void scheduler_show_queue()
 {
   /*
-    job_t *tmp = (job_t *)s->queue->head->item;
-  if(s->queue->head->item == NULL){
+    job_t *tmp = (job_t *)s->queue.head->item;
+  if(s->queue.head->item == NULL){
     printf("queue empty");
-  } else if (s->queue->head->next == NULL) {
+  } else if (s->queue.head->next == NULL) {
     printf("queue head only, id: %d", tmp->pid);
   } else {
     printf("queue head, id: %d", tmp->pid);
-    qnode_t *temp = s->queue->head->next;
+    qnode_t *temp = s->queue.head->next;
     while(temp != NULL) {
         job_t *node = (job_t *)temp->item;
       printf("next item, id: %d", node->pid);
