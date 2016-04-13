@@ -360,30 +360,10 @@ int scheduler_quantum_expired(int core_id, int time)
     if(s->activeCores[core_id] == NULL) {
       return -1;
     }
-    else {
-      if(s->activeCores[core_id]->remaining_time <= 0){
-          //update the global vars to reflect job being completed
-          completed_jobs++;
-          wait_time += s->activeCores[core_id]->waiting_time;
-          turnaround_time += (s->activeCores[core_id]->finish_time - s->activeCores[core_id]->start_time);
-          response_time += s->activeCores[core_id]->response_time;
-
-          //set_time(time);
-          //s->activeCores[core_id] = NULL;
-      }
-      else if (priqueue_size(&s->queue) == 0) {
+    else{
+        priqueue_offer(&s->queue, s->activeCores[core_id]);
+        s->activeCores[core_id] = priqueue_poll(&s->queue);
         return s->activeCores[core_id]->pid;
-      }
-      if(priqueue_size(&s->queue) != 0){
-          priqueue_offer(&s->queue, (void *)&s->activeCores[core_id]);
-          //s->activeCores[core_id]->update_time = time;
-	  //  free(s->activeCores[core_id]) /*= NULL*/;
-          job_t *new = priqueue_poll(&s->queue);
-          new->waiting_time += (time - new->update_time);
-          new->response_time += (time - new->update_time);
-          return new->pid;
-      }
-      return -1;
     }
 }
 
