@@ -36,7 +36,7 @@ void set_time(int time){
     if(s->activeCores[i] != NULL){
       s->activeCores[i]->remaining_time -= time - s->activeCores[i]->update_time;
       s->activeCores[i]->update_time = time;
-      printf("remaining_time is now : %d", s->activeCores[i]->remaining_time);
+      printf("\n\nremaining_time is now : %d\n\n", s->activeCores[i]->remaining_time);
       /*
       if(s->activeCores[i]->remaining_time <= 0) {
         s->activeCores[i]->finish_time = time + s->activeCores[i]->remaining_time;
@@ -295,6 +295,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   //update global time variables
   //free memory of core array
   //schedule next job
+  printf("\n\nSCHEDULER FINISHED. JOB_ID: %d\n\n", job_number);
   set_time(time);
   completed_jobs++;
   turnaround_time += (int)(time - s->activeCores[core_id]->arrival_time);
