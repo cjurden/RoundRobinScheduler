@@ -377,7 +377,7 @@ int scheduler_quantum_expired(int core_id, int time)
       if(priqueue_size(&s->queue) != 0){
           priqueue_offer(&s->queue, (void *)&s->activeCores[core_id]);
           //s->activeCores[core_id]->update_time = time;
-	    free(s->activeCores[core_id]) /*= NULL*/;
+	  //  free(s->activeCores[core_id]) /*= NULL*/;
           job_t *new = priqueue_poll(&s->queue);
           new->waiting_time += (time - new->update_time);
           new->response_time += (time - new->update_time);
