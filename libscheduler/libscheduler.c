@@ -143,6 +143,8 @@ void scheduler_start_up(int cores, scheme_t scheme)
   for(count = 0; count < s->cores; count++){
       s->activeCores[count] = NULL;
   }
+
+  printf("SUCCESS SCHEDULE STARTUP");
 }//end scheduler start up
 
 /**
@@ -421,6 +423,7 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
+  /*
     job_t *tmp = (job_t *)s->queue->head->item;
   if(s->queue->head->item == NULL){
     printf("queue empty");
@@ -435,4 +438,5 @@ void scheduler_show_queue()
       temp = temp->next;
     }
   }
+  */
 }
