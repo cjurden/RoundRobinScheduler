@@ -335,8 +335,7 @@ int scheduler_quantum_expired(int core_id, int time)
     /*
     * update the remaining time for the job currently running on the core
     */
-    s->activeCores[core_id]->remaining_time -= time - s->activeCores[core_id]->update_time;
-    s->activeCores[core_id]->update_time = time;
+    set_time(time);
 
     /*
     * See if that job has completed running. If so, free it
