@@ -38,7 +38,7 @@ typedef struct _scheduler_t {
     priqueue_t *queue;       // queue to hold jobs waiting
     int cores;              // number of cores for the simlator
     job_t** activeCores;    // job_t pointer array, with size == the number of cores specified.
-}
+} scheduler_t;
 
 
 /*
