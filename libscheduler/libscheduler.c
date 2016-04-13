@@ -264,6 +264,15 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   //update global time variables
   //free memory of core array
   //schedule next job
+  set_time(time);
+  completed_jobs++;
+  turnaround_time += time - s->activeCores[core_id]->arrival_time;
+  free(s->activeCores[core_id]);
+  if(s->queue[0]!=NULL){
+    wait_time += s->queue[0]->wait_time;
+    s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
+    return s->activeCores[core_id]->job_id;
+  }
 	return -1;
 }
 
@@ -285,6 +294,13 @@ int scheduler_quantum_expired(int core_id, int time)
 {
   //if no job waiting, return the current job id
   //if job waiting,
+  set_time(time);
+  if(s->queue[0] != NULL) {
+    priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
+    wait_time += s->queue[0]->wait_time;
+    s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
+    return s->activeCores[core_id]->job_id;
+  }
 	return -1;
 }
 
@@ -298,6 +314,8 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
+  avgWaitTime = (float) (wait_time / completed_jobs);
+
 	return 0.0;
 }
 
@@ -311,6 +329,7 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
+
 	return 0.0;
 }
 
