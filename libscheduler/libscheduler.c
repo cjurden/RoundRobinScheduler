@@ -307,7 +307,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   if(s->queue.head != NULL){
     job_t *tmp = (job_t *)(&s->queue.head->item);
     wait_time += (int)tmp->waiting_time;
-    s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
+    s->activeCores[core_id] = (job_t *)priqueue_poll(&s->queue);
     return tmp->pid;
   }
 	return -1;
