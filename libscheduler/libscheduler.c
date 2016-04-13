@@ -150,17 +150,17 @@ void scheduler_start_up(int cores, scheme_t scheme)
   */
   switch(s->scheme){
     case FCFS :
-        s->queue->priqueue_init(q, compareFCFS);
+        priqueue_init(s->queue, compareFCFS);
     case SJF  :
-        s->queue->priqueue_init(q, compareSJF);
+        priqueue_init(s->queue, compareSJF);
     case PSJF :
-        s->queue->priqueue_init(q, compareSJF);
+        priqueue_init(s->queue, compareSJF);
     case PRI  :
-        s->queue->priqueue_init(q, comparePriority);
+        priqueue_init(s->queue, comparePriority);
     case PPRI :
-        s->queue->priqueue_init(q, comparePriority);
+        priqueue_init(s->queue, comparePriority);
     case RR   :
-        s->queue->priqueue_init(q, compareFCFS);
+        priqueue_init(s->queue, compareFCFS);
   }//end switch
 
   /*
@@ -186,9 +186,41 @@ void scheduler_start_up(int cores, scheme_t scheme)
   @return FALSE if we should NOT preempt the current job
  */
  bool checkForPreemption(scheme_t scheme, job_t* current, job_t* new){
-
+     if(scheme = PPRI){
+         int prio = current->priority - new->priority;
+         if(prio > 0){ //this means that the new job has higher prio
+             return true;
+         }
+         if(prio < 0){ //this means that the current job has higher prio, should NOT preempt
+             return false;
+         }
+         //if we get here, we know the jobs have equal prios. so we defer to arrival times
+         int arrive = current->arrival_time - new->arrival_time;
+         if(arrive > 0){ //this mean the new job arrived before current
+             return true;
+         }
+         if(arrive <= 0){ //current job has earlier or equal arrival time, do NOT preempt
+             return false;
+         }
+     }
+     if(scheme = PSJF){
+         int rem_time = current->remaining_time - new->remaining_time;
+         if(rem_time > 0){ //this means that the new job has shorter remaining_time, preempt
+             return true;
+         }
+         if(rem_time < 0){ //this means that the current job has shorter remaining time, should NOT preempt
+             return false;
+         }
+         //if we get here, we know the jobs have equal prios. so we defer to arrival times
+         int arrive = current->arrival_time - new->arrival_time;
+         if(arrive > 0){ //this mean the new job arrived before current
+             return true;
+         }
+         if(arrive <= 0){ //current job has earlier or equal arrival time, do NOT preempt
+             return false;
+         }
+     }
  }
-
 
 /**
   Called when a new job arrives.
@@ -212,16 +244,12 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-  struct job_t job;
-  job.pid = job_number;
-  job.arrival_time = time;
-  job.run_time = running_time;
-  job.priority = priority;
-
-  //if open cores, put job in lowest core_di
-  //if no preemption, add to Queue
-  //handle preemption
-    //TODO HOW DO WE DO THIS
+  set_time(time);
+  job_t *job = malloc(sizeof(job_t));
+  job->pid = job_number;
+  job->arrival_time = time;
+  job->remaining_time = running_time;
+  job->priority = priority;
 
     int count;
     for(count = 0; count < s->cores; count++){
@@ -230,17 +258,40 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         */
         if(s->activeCores[count] == NULL){
             s->activeCores[count] = job;
-            job.start_time = time;
+            job->start_time = time;
             no_cores_active++;
             return count;
         }
+    }
         /*
         * All cores are busy. Check if we can/should preempt a job on a core
         * given the scheme.
         */
-    }
-
-	return -1;
+        if(s->scheme == PSJF || s->scheme == PPRI){
+            /*
+            * we have a preemptive scheme. so we loop through the cores to
+            */
+            int count;
+            for(count = 0; count < s->cores; count++){
+                if(checkForPreemption(s->scheme, s->activeCores[count],job)==TRUE){
+                    /*
+                    * so we need to preempt. remove current job and put it on
+                    * the queue, replace with new.
+                    */
+                    priqueue_offer(s->queue,s->activeCores[count]);
+                    //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
+                    s->activeCores[count] = job;
+                    job->response_time = time; //Note that this might be weird
+                    return count;
+                }
+            }
+        }//end preemptive if check
+    /*
+    * If we get here, we either have nothing to preempt or all cores are busy.
+    * So, place the job on the queue.
+    */
+    priqueue_offer(s->queue,job);
+    return -1;
 }
 
 
