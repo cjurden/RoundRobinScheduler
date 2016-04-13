@@ -19,7 +19,7 @@
  */
 void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
 {
-      printf("queue init");
+//printf("queue init");
     q->size=0;
     q->comp = comparer;
     q->head=NULL;
@@ -38,7 +38,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
     /*
     * Create new qnode_t item and populate
     */
-      printf("queue offer");
+    //  printf("queue offer");
     qnode_t *node = (qnode_t*)malloc(sizeof(qnode_t));
     node->item = ptr;
     node->next = NULL;
@@ -101,7 +101,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-      printf("peek");
+    //  printf("peek");
     if(q->size != 0){
         return q->head->item;
     }
@@ -120,7 +120,7 @@ void *priqueue_peek(priqueue_t *q)
  */
 void *priqueue_poll(priqueue_t *q)
 {
-      printf("poll");
+    //  printf("poll");
     if(q->head == NULL){
         return NULL;
     }
@@ -181,7 +181,7 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-      printf("pri remove");
+    //  printf("pri remove");
     if(q->size == 0){
         return 0;
     }
