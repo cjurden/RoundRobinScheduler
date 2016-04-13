@@ -319,8 +319,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   completed_jobs++;
   turnaround_time += time - s->activeCores[core_id]->arrival_time;
   free(s->activeCores[core_id]);
-  if(s->queue[0]!=NULL){
-    wait_time += s->queue[0]->wait_time;
+  if(s->queue->head!=NULL){
+    wait_time += s->queue->head->wait_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return s->activeCores[core_id]->job_id;
   }
@@ -346,9 +346,9 @@ int scheduler_quantum_expired(int core_id, int time)
   //if no job waiting, return the current job id
   //if job waiting,
   set_time(time);
-  if(s->queue[0] != NULL) {
+  if(s->queue->head != NULL) {
     priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
-    wait_time += s->queue[0]->wait_time;
+    wait_time += s->queue->head->wait_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
     return s->activeCores[core_id]->job_id;
   }
@@ -366,7 +366,6 @@ int scheduler_quantum_expired(int core_id, int time)
 float scheduler_average_waiting_time()
 {
   avgWaitTime = (float) (wait_time / completed_jobs);
-
 	return 0.0;
 }
 
@@ -380,7 +379,7 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-
+  avgTurnaroundTie = (float)(turnaround_time / completed_jobs);
 	return 0.0;
 }
 
@@ -394,6 +393,7 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
+  avgResponseTime = (float)(response_time / completed_jobs);
 	return 0.0;
 }
 
@@ -406,7 +406,19 @@ float scheduler_average_response_time()
 */
 void scheduler_clean_up()
 {
-
+  if(s->queue->head != NULL){
+    while(s->queue->next != NULL) {
+      struct job_t *temp = s->queue->head->next;
+      free(s->queue->head);
+      s->queue->head = temp;
+    }
+  }
+  int i = 0;
+  while(s->queue->activeCores[i] != NULL){
+    free(s->queue->activeCores[i]);
+    i++;
+  }
+  free(s);
 }
 
 
@@ -423,5 +435,16 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
-
+  if(s->queue->head == NULL){
+    printf("queue empty");
+  } else if (s->queue->head->next == NULL) {
+    printf("queue head only, id: %d", s->queue->head->job_id);
+  } else {
+    printf("queue head, id: %d", s->queue->head->job_id);
+    struct job_t *temp = s->queue->head->next;
+    while(temp != NULL) {
+      printf("next item, id: ", temp->job_id);
+      temp = temp->next;
+    }
+  }
 }
