@@ -222,7 +222,7 @@ int main(int argc, char **argv)
 	printf(" scheduling...\n\n");
 
 	scheduler_start_up(cores, scheme);
-
+	printf("after startup");
 
 	int time = 0, i, j;
 	int active_jobs = job_id, jobs_alive = 0;

@@ -32,6 +32,7 @@ scheduler_t *s;
 * keeps track of last time time was updated
 */
 void set_time(int time){
+  printf("set_time");
   int diff = time - last_time;
   for(int i = 0; i < no_cores_active; i ++) {
     s->activeCores[i]->remaining_time = s->activeCores[i]->remaining_time - diff;
@@ -50,6 +51,7 @@ void set_time(int time){
 */
 
 int compareFCFS(const void *elem1, const void *elem2){
+  printf("compareFCFS");
   job_t* j1 = (job_t *)elem1;
   job_t* j2 = (job_t *)elem2;
 
@@ -57,6 +59,7 @@ int compareFCFS(const void *elem1, const void *elem2){
 }
 
 int compareSJF(const void *elem1, const void *elem2){
+    printf("compareSJF");
     job_t* j1 = (job_t *)elem1;
     job_t* j2 = (job_t *)elem2;
 
@@ -73,6 +76,7 @@ int compareSJF(const void *elem1, const void *elem2){
 }
 
 int comparePriority(const void *elem1, const void *elem2){
+      printf("comparePriority");
     job_t* j1 = (job_t *)elem1;
     job_t* j2 = (job_t *)elem2;
 
@@ -106,6 +110,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
     /*
     * Allocate memory for structure and initialize all variables.
     */
+    printf("schdedulerStartUp");
     s = malloc(sizeof(scheduler_t));
     s->activeCores = malloc(sizeof(job_t*)*(s->cores));
     s->scheme = scheme;
@@ -154,6 +159,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
   @return FALSE if we should NOT preempt the current job
  */
  bool checkForPreemption(scheme_t scheme, job_t* current, job_t* new){
+   printf("checkForPreemption");
      if(scheme == PPRI){
          int prio = current->priority - new->priority;
          if(prio > 0){ //this means that the new job has higher prio
@@ -213,6 +219,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+  printf("sched new job");
   set_time(time);
   job_t *job = malloc(sizeof(job_t));
   job->pid = job_number;
@@ -280,7 +287,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
-
+  printf("job_finished");
   //update global time variables
   //free memory of core array
   //schedule next job
@@ -314,7 +321,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 int scheduler_quantum_expired(int core_id, int time)
 {
   //if no job waiting, return the current job id
-  //if job waiting,
+  //if job waiting
+  printf("quantum expired");
   set_time(time);
   if(s->queue->head->item != NULL) {
     priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
