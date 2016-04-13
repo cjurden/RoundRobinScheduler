@@ -225,7 +225,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
   set_time(time);
   if(job_number == -1) {
-
+    return -1;
   } else {
     job_t *job = malloc(sizeof(job_t));
     job->pid = job_number;
