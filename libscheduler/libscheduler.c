@@ -221,7 +221,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     job->arrival_time = time;
     job->remaining_time = running_time;
     job->priority = priority;
-    job->update_time = time;
     set_time(time);
       int count;
       for(count = 0; count < s->cores; count++){
@@ -262,6 +261,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       * If we get here, we either have nothing to preempt or all cores are busy.
       * So, place the job on the queue.
       */
+      set_time(time);
       priqueue_offer(&s->queue,job);
     return -1;
 }
@@ -289,8 +289,12 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   printf("\n\nSCHEDULER FINISHED. JOB_ID: %d\n\n", job_number);
   set_time(time);
   completed_jobs++;
-  turnaround_time += (int)(time - s->activeCores[core_id]->arrival_time);
-
+  int t_time = (time - s->activeCores[core_id]->arrival_time);
+  &turnaround_time = t_time;
+  printf("\n\n[scheduler_job_finished] s->activeCores[core_id]->waiting_time: %d\n\n", s->activeCores[core_id]->waiting_time);
+  int w_time = time - s->activeCores[core_id]->waiting_time;
+  printf("\n\n[scheduler_job_finished] wait time: %d\n\n", w_time);
+  &wait_time +=
   free(s->activeCores[core_id]);
 
   //check to see if another job is ready to hop on the core
@@ -380,9 +384,9 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-    return avgWaitTime;
+  printf("wait time: %d", wait_time);
   avgWaitTime = (float) (wait_time / completed_jobs);
-	return 0.0;
+  return avgWaitTime;
 }
 
 
@@ -410,9 +414,8 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
-    return avgResponseTime;
   avgResponseTime = (float)(response_time / completed_jobs);
-	return 0.0;
+	return avgResponseTime;
 }
 
 
