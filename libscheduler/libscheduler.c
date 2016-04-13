@@ -35,6 +35,7 @@ void set_time(int time){
   int diff = time - last_time;
   for(int i = 0; i < no_cores_active; i ++) {
     s->activeCores[i]->remaining_time = s->activeCores[i]->remaining_time - diff;
+    print("remaining_time is now : %d", s->activeCores[i]->remaining_time);
     if(s->activeCores[i]->remaining_time <= 0) {
       s->activeCores[i]->finish_time = time + s->activeCores[i]->remaining_time;
     }
