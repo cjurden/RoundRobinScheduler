@@ -10,6 +10,37 @@
 */
 typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;
 
+/**
+  Stores information making up a job to be scheduled including any statistics.
+  You may need to define some global variables or a struct to store your job queue elements.
+*/
+typedef struct _job_t
+{
+  int pid;                // unique job identifier
+  int priority;           // job priority. 0 is highest.
+
+  int arrival_time;       //time job was received.
+  int remaining_time;     //will be initialized to job length, and will be possibly be updated when preemptive schemes are used.
+
+  int start_time;         //time job started executing
+  int finish_time;        //time job finished executing
+
+  int waiting_time;       //how long the job spends waiting in the queue until execution
+  int response_time;      //amount of time it takes from when a job was first submitted until the scheduler produces first response
+} job_t;
+
+
+/*
+* scheduler struct
+*/
+typedef struct _scheduler_t {
+    scheme_t scheme;        // scheme to be used (will decided comparator function)
+    priqueue_t *queue;       // queue to hold jobs waiting
+    int cores;              // number of cores for the simlator
+    job_t** activeCores;    // job_t pointer array, with size == the number of cores specified.
+}
+
+
 /*
 * Comparator functions for the different schemes.
 */
