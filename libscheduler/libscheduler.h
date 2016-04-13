@@ -39,7 +39,7 @@ typedef struct _job_t
 */
 typedef struct _scheduler_t {
     scheme_t scheme;        // scheme to be used (will decided comparator function)
-    priqueue_t *queue;       // queue to hold jobs waiting
+    priqueue_t queue;       // queue to hold jobs waiting
     int cores;              // number of cores for the simlator
     job_t** activeCores;    // job_t pointer array, with size == the number of cores specified.
 } scheduler_t;
