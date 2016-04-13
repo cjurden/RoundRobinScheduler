@@ -126,17 +126,17 @@ void scheduler_start_up(int cores, scheme_t scheme)
   */
   switch(s->scheme){
     case FCFS :
-        priqueue_init(s->queue, compareFCFS);
+        priqueue_init(&s->queue, compareFCFS);
     case SJF  :
-        priqueue_init(s->queue, compareSJF);
+        priqueue_init(&s->queue, compareSJF);
     case PSJF :
-        priqueue_init(s->queue, compareSJF);
+        priqueue_init(&s->queue, compareSJF);
     case PRI  :
-        priqueue_init(s->queue, comparePriority);
+        priqueue_init(&s->queue, comparePriority);
     case PPRI :
-        priqueue_init(s->queue, comparePriority);
+        priqueue_init(&s->queue, comparePriority);
     case RR   :
-        priqueue_init(s->queue, compareRR);
+        priqueue_init(&s->queue, compareRR);
   }//end switch
 
   /*
@@ -262,7 +262,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                       * so we need to preempt. remove current job and put it on
                       * the queue, replace with new.
                       */
-                      priqueue_offer(s->queue,s->activeCores[count]);
+                      priqueue_offer(&s->queue,s->activeCores[count]);
                       //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
                       s->activeCores[count] = job;
                       job->response_time = time; //Note that this might be weird
@@ -274,7 +274,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       * If we get here, we either have nothing to preempt or all cores are busy.
       * So, place the job on the queue.
       */
-      priqueue_offer(s->queue,job);
+      priqueue_offer(&s->queue,job);
   }
     return -1;
 }
@@ -336,10 +336,10 @@ int scheduler_quantum_expired(int core_id, int time)
     return(s->activeCores[core_id]->pid);
   }
   if(s->queue.head != NULL) {
-    priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
+    priqueue_offer(&s->queue, (void *)&s->activeCores[core_id]);
     job_t *tmp = (job_t *)(&s->queue.head->item);
     wait_time += (int)tmp->waiting_time;
-    s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
+    s->activeCores[core_id] = (job_t *)priqueue_poll(&s->queue);
     return s->activeCores[core_id]->pid;
   }
 	return -1;
@@ -401,7 +401,7 @@ void scheduler_clean_up()
     qnode_t *temp = tmp->next;
     while(tmp->next != NULL) {
       free(&s->queue.head->item);
-      &s->queue.head->item = temp;
+      s->queue.head->item = temp;
       qnode_t *temp = tmp->next;
     }
     free(tmp);
