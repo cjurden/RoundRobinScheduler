@@ -224,53 +224,57 @@ void scheduler_start_up(int cores, scheme_t scheme)
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
   set_time(time);
-  job_t *job = malloc(sizeof(job_t));
-  job->pid = job_number;
-  job->arrival_time = time;
-  job->remaining_time = running_time;
-  job->priority = priority;
-  job->update_time = time;
+  if(job_number == -1) {
 
-    int count;
-    for(count = 0; count < s->cores; count++){
-        /*
-        * iterate through cores and find the first available.
-        */
-        if(s->activeCores[count] == NULL){
-            s->activeCores[count] = job;
-            job->start_time = time;
-            no_cores_active += 1;
-            return count;
-        }
-    }
-        /*
-        * All cores are busy. Check if we can/should preempt a job on a core
-        * given the scheme.
-        */
-        if(s->scheme == PSJF || s->scheme == PPRI){
-            /*
-            * we have a preemptive scheme. so we loop through the cores to
-            */
-            int count;
-            for(count = 0; count < s->cores; count++){
-                if(checkForPreemption(s->scheme, s->activeCores[count],job) == TRUE){
-                    /*
-                    * so we need to preempt. remove current job and put it on
-                    * the queue, replace with new.
-                    */
-                    priqueue_offer(s->queue,s->activeCores[count]);
-                    //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
-                    s->activeCores[count] = job;
-                    job->response_time = time; //Note that this might be weird
-                    return count;
-                }
-            }
-        }//end preemptive if check
-    /*
-    * If we get here, we either have nothing to preempt or all cores are busy.
-    * So, place the job on the queue.
-    */
-    priqueue_offer(s->queue,job);
+  } else {
+    job_t *job = malloc(sizeof(job_t));
+    job->pid = job_number;
+    job->arrival_time = time;
+    job->remaining_time = running_time;
+    job->priority = priority;
+    job->update_time = time;
+
+      int count;
+      for(count = 0; count < s->cores; count++){
+          /*
+          * iterate through cores and find the first available.
+          */
+          if(s->activeCores[count] == NULL){
+              s->activeCores[count] = job;
+              job->start_time = time;
+              no_cores_active += 1;
+              return count;
+          }
+      }
+          /*
+          * All cores are busy. Check if we can/should preempt a job on a core
+          * given the scheme.
+          */
+          if(s->scheme == PSJF || s->scheme == PPRI){
+              /*
+              * we have a preemptive scheme. so we loop through the cores to
+              */
+              int count;
+              for(count = 0; count < s->cores; count++){
+                  if(checkForPreemption(s->scheme, s->activeCores[count],job) == TRUE){
+                      /*
+                      * so we need to preempt. remove current job and put it on
+                      * the queue, replace with new.
+                      */
+                      priqueue_offer(s->queue,s->activeCores[count]);
+                      //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
+                      s->activeCores[count] = job;
+                      job->response_time = time; //Note that this might be weird
+                      return count;
+                  }
+              }
+          }//end preemptive if check
+      /*
+      * If we get here, we either have nothing to preempt or all cores are busy.
+      * So, place the job on the queue.
+      */
+      priqueue_offer(s->queue,job);
+  }
     return -1;
 }
 
