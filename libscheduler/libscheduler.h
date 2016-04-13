@@ -29,6 +29,8 @@ typedef struct _job_t
 
   int waiting_time;       //how long the job spends waiting in the queue until execution
   int response_time;      //amount of time it takes from when a job was first submitted until the scheduler produces first response
+
+  int update_time;  //keeps track of the last time job was updated
 } job_t;
 
 

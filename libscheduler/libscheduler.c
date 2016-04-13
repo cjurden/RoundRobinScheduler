@@ -13,7 +13,7 @@
 */
 float avgWaitTime, avgResponseTime, avgTurnaroundTie = 0.0;
 int completed_jobs = 0;
-int last_time = 0;
+//int last_time = 0;
 int no_cores_active = 0;
 int wait_time, response_time, turnaround_time = 0;
 
@@ -32,15 +32,18 @@ scheduler_t *s;
 * keeps track of last time time was updated
 */
 void set_time(int time){
-  int diff = time - last_time;
   for(int i = 0; i < no_cores_active; i ++) {
-    s->activeCores[i]->remaining_time = s->activeCores[i]->remaining_time - diff;
-    printf("remaining_time is now : %d", s->activeCores[i]->remaining_time);
-    if(s->activeCores[i]->remaining_time <= 0) {
-      s->activeCores[i]->finish_time = time + s->activeCores[i]->remaining_time;
+    if(s->activeCores[i] != NULL){
+      s->activeCores[i]->remaining_time -= time - s->activeCores[i]->update_time;
+      s->activeCores[i]->update_time = time;
+      printf("remaining_time is now : %d", s->activeCores[i]->remaining_time);
+      /*
+      if(s->activeCores[i]->remaining_time <= 0) {
+        s->activeCores[i]->finish_time = time + s->activeCores[i]->remaining_time;
+    }
+    */
     }
   }
-  last_time = time;
 }
 /*
 * Comparator function definitions.
@@ -226,6 +229,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->arrival_time = time;
   job->remaining_time = running_time;
   job->priority = priority;
+  job->update_time = time;
 
     int count;
     for(count = 0; count < s->cores; count++){
