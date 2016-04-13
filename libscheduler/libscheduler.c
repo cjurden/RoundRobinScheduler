@@ -132,7 +132,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
     case PPRI :
         priqueue_init(s->queue, comparePriority);
     case RR   :
-        priqueue_init(s->queue, compareFCFS);
+        priqueue_init(s->queue, compareRR);
   }//end switch
 
   /*
