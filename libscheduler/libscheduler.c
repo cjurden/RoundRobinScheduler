@@ -47,7 +47,7 @@ int compareFCFS(const void *elem1, const void *elem2){
   job_t* j1 = (job_t *)elem1;
   job_t* j2 = (job_t *)elem2;
 
-  return 0;
+  return j1->arrival_time - j2->arrival_time;
 }
 
 int compareSJF(const void *elem1, const void *elem2){
@@ -235,35 +235,36 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
               return count;
           }
       }
+      /*
+      * All cores are busy. Check if we can/should preempt a job on a core
+      * given the scheme.
+      */
+      if(s->scheme == PSJF || s->scheme == PPRI){
           /*
-          * All cores are busy. Check if we can/should preempt a job on a core
-          * given the scheme.
+          * we have a preemptive scheme. so we loop through the cores to
           */
-          if(s->scheme == PSJF || s->scheme == PPRI){
-              /*
-              * we have a preemptive scheme. so we loop through the cores to
-              */
-              int count;
-              for(count = 0; count < s->cores; count++){
-                  if(checkForPreemption(s->scheme, s->activeCores[count],job) == TRUE){
-                      /*
-                      * so we need to preempt. remove current job and put it on
-                      * the queue, replace with new.
-                      */
-                      priqueue_offer(&s->queue,s->activeCores[count]);
-                      //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
-                      s->activeCores[count] = job;
-                      job->response_time = time; //Note that this might be weird
-                      return count;
-                  }
+          int count;
+          for(count = 0; count < s->cores; count++){
+              if(checkForPreemption(s->scheme, s->activeCores[count],job) == TRUE){
+                  /*
+                  * so we need to preempt. remove current job and put it on
+                  * the queue, replace with new.
+                  */
+                  priqueue_offer(&s->queue,s->activeCores[count]);
+                  //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
+                  s->activeCores[count] = job;
+                  job->response_time = time; //Note that this might be weird
+                  return count;
               }
-          }//end preemptive if check
+          }
+      }//end preemptive if check
+
       /*
       * If we get here, we either have nothing to preempt or all cores are busy.
       * So, place the job on the queue.
       */
       priqueue_offer(&s->queue,job);
-    return -1;
+      return -1;
 }
 
 
