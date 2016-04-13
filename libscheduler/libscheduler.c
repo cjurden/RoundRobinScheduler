@@ -294,7 +294,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
     job_t *tmp = (job_t *)(s->queue->head->item);
     wait_time += tmp->waiting_time;
     s->activeCores[core_id] = (job_t *)priqueue_poll(s->queue);
-    return job_number;
+    return tmp->pid;
   }
 	return -1;
 }
@@ -318,7 +318,7 @@ int scheduler_quantum_expired(int core_id, int time)
   //if no job waiting, return the current job id
   //if job waiting,
   set_time(time);
-  if(s->queue->head != NULL) {
+  if(s->queue->head->item != NULL) {
     priqueue_offer(s->queue, (void *)s->activeCores[core_id]);
     job_t *tmp = (job_t *)(s->queue->head->item);
     wait_time += tmp->waiting_time;
