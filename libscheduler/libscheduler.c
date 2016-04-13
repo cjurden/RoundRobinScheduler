@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #include "libscheduler.h"
 #include "../libpriqueue/libpriqueue.h"
@@ -11,18 +12,18 @@
 /*
 * Global variables to handle wait, response and turnaround time.
 */
-float avgWaitTime, avgResponseTime, avgTurnaroundTime = 0.0;
+float avgWaitTime = 0, avgResponseTime = 0, avgTurnaroundTime = 0.0;
 
 //int last_time = 0;
 int no_cores_active = 0;
-int wait_time, response_time, turnaround_time = 0;
+int wait_time = 0, response_time = 0, turnaround_time = 0;
 int completed_jobs = 0;
 
 /*
 * Scheme, queue and struct to be used within all scheduling functions.
 */
 scheme_t scheme = 0;
-scheduler_t *s;
+scheduler_t *s = NULL;
 
 /*
 * updates reaminign time of every item in the core array
@@ -59,6 +60,7 @@ int compareSJF(const void *elem1, const void *elem2){
     * to the arrival times of each job.
     */
     int val = j1->remaining_time - j2->remaining_time;
+
     if(val != 0){
         return val;
     }
@@ -74,7 +76,6 @@ int comparePriority(const void *elem1, const void *elem2){
     * If they equal, we defer the comparison to the arrival
     * times of each job.
     */
-
     int val = j1->priority - j2->priority;
     if(val != 0){
         return val;
@@ -86,6 +87,12 @@ int compareRR(const void *elem1, const void *elem2){
     void *ptr = &elem1;
     ptr = &elem2;
   return 0;
+}
+
+void abrt_handler(int sig) {
+  (void) sig;
+  fprintf(stderr, "ABORT IN SCHEME: %d\n", s->scheme);
+  exit(-1);
 }
 
 /**
@@ -102,11 +109,13 @@ int compareRR(const void *elem1, const void *elem2){
 */
 void scheduler_start_up(int cores, scheme_t scheme)
 {
+  signal(SIGABRT, abrt_handler);
+  
     /*
     * Allocate memory for structure and initialize all variables.
     */
     s = malloc(sizeof(scheduler_t));
-    s->activeCores = malloc(sizeof(job_t*)*(s->cores));
+    s->activeCores = malloc(sizeof(job_t*)*(cores));
     s->scheme = scheme;
     s->cores = cores;
 
@@ -118,16 +127,25 @@ void scheduler_start_up(int cores, scheme_t scheme)
   switch(s->scheme){
     case FCFS :
         priqueue_init(&s->queue, compareFCFS);
+	break;
     case SJF  :
         priqueue_init(&s->queue, compareSJF);
+	break;
     case PSJF :
         priqueue_init(&s->queue, compareSJF);
+	break;
     case PRI  :
         priqueue_init(&s->queue, comparePriority);
+	break;
     case PPRI :
         priqueue_init(&s->queue, comparePriority);
+	break;
     case RR   :
         priqueue_init(&s->queue, compareRR);
+	break;
+  default:
+    printf("Not a valid case %d\n", scheme);
+    exit(-1);
   }//end switch
 
   /*
@@ -214,8 +232,10 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+  set_time(time);
   printf("\n\nscheduling new job! number: %d\n\n", job_number);
     job_t *job = malloc(sizeof(job_t));
+    memset(job, 0, sizeof(job_t));
     job->pid = job_number;
     job->arrival_time = time;
     job->remaining_time = running_time;
@@ -298,7 +318,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   wait_time += s->activeCores[core_id]->waiting_time;
   response_time += s->activeCores[core_id]->response_time;
 
-  printf("\n\n[scheduler_job_finished] s->activeCores[%d]->waiting_time: %d\n\n",core_id, s->activeCores[core_id]->waiting_time);
+  printf("\n\n[scheduler_job_finished] s->activeCores[%d]->waiting_time: %d\n\n",core_id, 8);//s->activeCores[core_id]->waiting_time);
 
   free(s->activeCores[core_id]);
 
@@ -352,7 +372,6 @@ int scheduler_quantum_expired(int core_id, int time)
           response_time += s->activeCores[core_id]->response_time;
 
           //set_time(time);
-          free(s->activeCores[core_id]);
           s->activeCores[core_id] = NULL;
       }
       else if (priqueue_size(&s->queue) == 0) {
@@ -361,7 +380,7 @@ int scheduler_quantum_expired(int core_id, int time)
       if(priqueue_size(&s->queue) != 0){
           priqueue_offer(&s->queue, (void *)&s->activeCores[core_id]);
           s->activeCores[core_id]->update_time = time;
-          free(s->activeCores[core_id]) /*= NULL*/;
+	    //free(s->activeCores[core_id]) /*= NULL*/;
           job_t *new = priqueue_poll(&s->queue);
           new->waiting_time += (time - new->update_time);
           new->response_time += (time - new->update_time);
