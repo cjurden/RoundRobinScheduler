@@ -52,9 +52,9 @@ int priqueue_offer(priqueue_t *q, void *ptr)
         return 0;
     }
 
-    int count = 0;
     qnode_t *cur = q->head;
     qnode_t *prev = NULL;
+    int count = 0;
     while(cur != NULL){
 
         /*

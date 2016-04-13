@@ -12,12 +12,11 @@
 * Global variables to handle wait, response and turnaround time.
 */
 float avgWaitTime, avgResponseTime, avgTurnaroundTime = 0.0;
-int completed_jobs = 0;
 
-int last_time = 0;
+//int last_time = 0;
 int no_cores_active = 0;
 int wait_time, response_time, turnaround_time = 0;
-
+int completed_jobs = 0;
 
 /*
 * Scheme, queue and struct to be used within all scheduling functions.
@@ -221,7 +220,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     job->arrival_time = time;
     job->remaining_time = running_time;
     job->priority = priority;
-    set_time(time);
+    job->update_time = time;
       int count;
       for(count = 0; count < s->cores; count++){
           /*
@@ -230,7 +229,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
           if(s->activeCores[count] == NULL){
               s->activeCores[count] = job;
               job->start_time = time;
-              no_cores_active += 1;
+              no_cores_active++;
               return count;
           }
       }
@@ -250,9 +249,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                   * the queue, replace with new.
                   */
                   priqueue_offer(&s->queue,s->activeCores[count]);
-                  //NEED TO DO SOME WORK WITH RESPONSE AND WAITING TIME here
+                  s->activeCores[count]->update_time = time;
                   s->activeCores[count] = job;
-                  job->response_time = time; //Note that this might be weird
+                  job->response_time = (time - job->update_time);
+                  job->waiting_time = (time - job->update_time);
                   return count;
               }
           }
@@ -262,7 +262,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       * If we get here, we either have nothing to preempt or all cores are busy.
       * So, place the job on the queue.
       */
-      set_time(time);
+      //set_time(time);
       priqueue_offer(&s->queue,job);
       return -1;
 }
@@ -289,19 +289,24 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   */
   printf("\n\nSCHEDULER FINISHED. JOB_ID: %d\n\n", job_number);
   set_time(time);
+
   completed_jobs++;
-  int t_time = (time - s->activeCores[core_id]->arrival_time);
-  &turnaround_time = t_time;
-  printf("\n\n[scheduler_job_finished] s->activeCores[core_id]->waiting_time: %d\n\n", s->activeCores[core_id]->waiting_time);
-  int w_time = time - s->activeCores[core_id]->waiting_time;
-  printf("\n\n[scheduler_job_finished] wait time: %d\n\n", w_time);
-  &wait_time +=
+
+  //update the turnaround time for the job, and add to overall turnaround time
+  s->activeCores[core_id]->finish_time = time;
+  turnaround_time += (s->activeCores[core_id]->finish_time - s->activeCores[core_id]->start_time);
+  wait_time += s->activeCores[core_id]->waiting_time;
+  response_time += s->activeCores[core_id]->response_time;
+
+  printf("\n\n[scheduler_job_finished] s->activeCores[%d]->waiting_time: %d\n\n",core_id, s->activeCores[core_id]->waiting_time);
+
   free(s->activeCores[core_id]);
 
   //check to see if another job is ready to hop on the core
   if(s->queue.head != NULL){
       s->activeCores[core_id] = priqueue_poll(&s->queue);
       s->activeCores[core_id]->waiting_time += (time - s->activeCores[core_id]->update_time);
+      s->activeCores[core_id]->response_time += (time - s->activeCores[core_id]->update_time);
       s->activeCores[core_id]->update_time = time;
       return s->activeCores[core_id]->pid;
   }
@@ -337,12 +342,19 @@ int scheduler_quantum_expired(int core_id, int time)
     * See if that job has completed running. If so, free it
     */
     if(s->activeCores[core_id]->remaining_time <= 0){
-        //set_time(time); here
+        //update the global vars to reflect job being completed
+        completed_jobs++;
+        wait_time += s->activeCores[core_id]->waiting_time;
+        turnaround_time += (s->activeCores[core_id]->finish_time - s->activeCores[core_id]->start_time);
+        response_time += s->activeCores[core_id]->response_time;
+
+        //set_time(time);
         free(s->activeCores[core_id]);
         s->activeCores[core_id] = NULL;
     }
     else{
         priqueue_offer(&s->queue, s->activeCores[core_id]);
+        s->activeCores[core_id]->update_time = time;
         s->activeCores[core_id] = NULL;
     }
 
@@ -350,29 +362,11 @@ int scheduler_quantum_expired(int core_id, int time)
     //if job waiting,
     if(priqueue_size(&s->queue) != 0){
         job_t *new = priqueue_poll(&s->queue);
-        new->waiting_time += time - new->update_time;
-
-        //do some work with time_responded to here
-
+        new->waiting_time += (time - new->update_time);
+        new->response_time += (time - new->update_time);
         return new->pid;
     }
     return -1;
-
-    /*
-        //set_time(time);
-  if(s->queue.head == NULL) {
-    return((int)s->activeCores[core_id]->pid);
-  }
-  if(s->queue.head != NULL) {
-    priqueue_offer(&s->queue, (void *)&s->activeCores[core_id]);
-    job_t *tmp = (job_t *)(&s->queue.head->item);
-    wait_time += (int)tmp->waiting_time;
-    s->activeCores[core_id] = (job_t *)priqueue_poll(&s->queue);
-    return (int)s->activeCores[core_id]->pid;
-  }
-	return -1;
-
-    */
 }
 
 
@@ -400,9 +394,8 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
+    avgTurnaroundTime = (float)turnaround_time/completed_jobs;
     return avgTurnaroundTime;
-  //avgTurnaroundTie = (float)(turnaround_time / completed_jobs);
-	//return 0.0;
 }
 
 
@@ -430,26 +423,6 @@ void scheduler_clean_up()
     priqueue_destroy(&s->queue);
     free(s->activeCores);
     free(s);
-
-    /*
-  if(s->queue.head != NULL){
-    qnode_t *tmp = (qnode_t *)(&s->queue.head);
-    qnode_t *temp = tmp->next;
-    while(tmp->next != NULL) {
-      free(&s->queue.head->item);
-      s->queue.head->item = temp;
-      qnode_t *temp = tmp->next;
-    }
-    free(tmp);
-    free(temp);
-  }
-  int i = 0;
-  while(s->activeCores[i] != NULL){
-    free(s->activeCores[i]);
-    i++;
-  }
-  free(s);
-  */
 }
 
 
