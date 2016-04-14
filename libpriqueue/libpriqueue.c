@@ -151,7 +151,7 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
-    printf("Entered priqueue_at");
+  //  printf("Entered priqueue_at");
     /*
     * Base case, queue is empty or index is out of range
     */
@@ -229,7 +229,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
-      printf("priqueue remove at");
+    //  printf("priqueue remove at");
     if(q->size == 0 || q->size < index+1){
         return NULL;
     }
@@ -270,7 +270,7 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-      printf("destroy");
+    //  printf("destroy");
     qnode_t *cur = q->head;
     qnode_t *tmp = NULL;
     while(cur != NULL){

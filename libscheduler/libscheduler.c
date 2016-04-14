@@ -79,10 +79,10 @@ int comparePSJF(const void *elem1, const void *elem2){
     */
     int val = j1->remaining_time - j2->remaining_time;
 
-    if(val != 0){
-        return val;
+    if(val == 0){
+        return j1->arrival_time - j2->arrival_time;
     }
-    return j1->arrival_time - j2->arrival_time;
+      return val;
 }
 
 int comparePriority(const void *elem1, const void *elem2){
@@ -162,7 +162,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
         priqueue_init(&s->queue, compareRR);
 	break;
   default:
-    printf("Not a valid case %d\n", scheme);
+//    printf("Not a valid case %d\n", scheme);
     exit(-1);
   }//end switch
 
@@ -352,7 +352,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         s->activeCores[core_id]->response_time = (t - s->activeCores[core_id]->arrival_time);
       }
       s->activeCores[core_id]->waiting_time += (time - s->activeCores[core_id]->preempted_time);
-      printf("ANOTHER JOB IS GOING TO HOP ON CORE %d, WITH PID: %d",core_id,s->activeCores[core_id]->pid);
+    //  printf("ANOTHER JOB IS GOING TO HOP ON CORE %d, WITH PID: %d",core_id,s->activeCores[core_id]->pid);
       return s->activeCores[core_id]->pid;
   }
 
@@ -401,7 +401,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-  fprintf(stderr, "wait time: %d\n", wait_time);
+  //fprintf(stderr, "wait time: %d\n", wait_time);
   avgWaitTime =  ((float)wait_time / (float)completed_jobs);
   return avgWaitTime;
 }
@@ -416,7 +416,7 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-    fprintf(stderr, "turnaround time: %d\n", turnaround_time);
+  //  fprintf(stderr, "turnaround time: %d\n", turnaround_time);
     avgTurnaroundTime = ((float)turnaround_time/(float)completed_jobs);
     return avgTurnaroundTime;
 }
@@ -431,7 +431,7 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
-  fprintf(stderr, "response time: %d\n", response_time);
+//  fprintf(stderr, "response time: %d\n", response_time);
   avgResponseTime = ((float)response_time / (float)completed_jobs);
 	return avgResponseTime;
 }
