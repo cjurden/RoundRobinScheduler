@@ -23,12 +23,16 @@ typedef struct _job_t
 
   int arrival_time;       //time job was received.
   int remaining_time;     //will be initialized to job length, and will be possibly be updated when preemptive schemes are used.
+  int run_time;
 
   int start_time;         //time job started executing
   int finish_time;        //time job finished executing
 
   int waiting_time;       //how long the job spends waiting in the queue until execution
   int response_time;      //amount of time it takes from when a job was first submitted until the scheduler produces first response
+
+  int preempted_time;
+  int restart_time;
 
   int update_time;  //keeps track of the last time job was updated
 } job_t;

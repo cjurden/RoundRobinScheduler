@@ -59,6 +59,24 @@ int compareSJF(const void *elem1, const void *elem2){
     * of the two jobs. If they equal, we defer the comparison
     * to the arrival times of each job.
     */
+    int val = j1->run_time - j2->run_time;
+
+    if(val != 0){
+        return val;
+    }
+    return j1->arrival_time - j2->arrival_time;
+}
+
+
+int comparePSJF(const void *elem1, const void *elem2){
+    job_t* j1 = (job_t *)elem1;
+    job_t* j2 = (job_t *)elem2;
+
+    /*
+    * SJF scheme compares the remaining execution times
+    * of the two jobs. If they equal, we defer the comparison
+    * to the arrival times of each job.
+    */
     int val = j1->remaining_time - j2->remaining_time;
 
     if(val != 0){
@@ -155,11 +173,6 @@ void scheduler_start_up(int cores, scheme_t scheme)
   for(count = 0; count < s->cores; count++){
       s->activeCores[count] = NULL;
   }
-<<<<<<< HEAD
-
-  //printf("SUCCESS SCHEDULE STARTUP");
-=======
->>>>>>> 1c5743690843a6e2060303dc41dfd53a21f44751
 }//end scheduler start up
 
 /**
@@ -207,7 +220,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
              return TRUE;
          }
          if(arrive <= 0){ //current job has earlier or equal arrival time, do NOT preempt
-             return TRUE;
+             return FALSE;
          }
      }
      return FALSE;
@@ -235,12 +248,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-<<<<<<< HEAD
-  //printf("\n\nscheduling new job! number: %d\n\n", job_number);
-=======
   set_time(time);
-  printf("\n\nscheduling new job! number: %d\n\n", job_number);
->>>>>>> 1c5743690843a6e2060303dc41dfd53a21f44751
     job_t *job = malloc(sizeof(job_t));
     memset(job, 0, sizeof(job_t));
     job->pid = job_number;
@@ -248,6 +256,9 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     job->remaining_time = running_time;
     job->priority = priority;
     job->update_time = time;
+    job->start_time = 0;
+    job->run_time = running_time;
+    job->response_time = -1;
       int count;
       for(count = 0; count < s->cores; count++){
           /*
@@ -256,6 +267,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
           if(s->activeCores[count] == NULL){
               s->activeCores[count] = job;
               job->start_time = time;
+              int t = time + 1;
+              job->response_time = (t - job->arrival_time);
               no_cores_active++;
               return count;
           }
@@ -275,11 +288,13 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                   * so we need to preempt. remove current job and put it on
                   * the queue, replace with new.
                   */
+                  s->activeCores[count]->preempted_time = time;
+
                   priqueue_offer(&s->queue,s->activeCores[count]);
-                  s->activeCores[count]->update_time = time;
                   s->activeCores[count] = job;
-                  job->response_time = (time - job->update_time);
-                  job->waiting_time = (time - job->update_time);
+                  s->activeCores[count]->start_time = time;
+                  int t = time + 1;
+                  s->activeCores[count]->response_time = (t - s->activeCores[count]->arrival_time);
                   return count;
               }
           }
@@ -290,6 +305,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       * So, place the job on the queue.
       */
       //set_time(time);
+      job->preempted_time = time;
       priqueue_offer(&s->queue,job);
       return -1;
 }
@@ -317,28 +333,25 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   //printf("\n\nSCHEDULER FINISHED. JOB_ID: %d\n\n", job_number);
   set_time(time);
 
-  completed_jobs++;
+  completed_jobs += 1;
 
   //update the turnaround time for the job, and add to overall turnaround time
   s->activeCores[core_id]->finish_time = time;
   turnaround_time += (s->activeCores[core_id]->finish_time - s->activeCores[core_id]->start_time);
+  //turnaround_time = s->activeCores[core_id]->run_time + s->activeCores[core_id]->waiting_time;
   wait_time += s->activeCores[core_id]->waiting_time;
   response_time += s->activeCores[core_id]->response_time;
-
-<<<<<<< HEAD
-  //printf("\n\n[scheduler_job_finished] s->activeCores[%d]->waiting_time: %d\n\n",core_id, s->activeCores[core_id]->waiting_time);
-=======
-  printf("\n\n[scheduler_job_finished] s->activeCores[%d]->waiting_time: %d\n\n",core_id, 8);//s->activeCores[core_id]->waiting_time);
->>>>>>> 1c5743690843a6e2060303dc41dfd53a21f44751
 
   free(s->activeCores[core_id]);
 
   //check to see if another job is ready to hop on the core
   if(s->queue.head != NULL){
       s->activeCores[core_id] = priqueue_poll(&s->queue);
-      s->activeCores[core_id]->waiting_time += (time - s->activeCores[core_id]->update_time);
-      s->activeCores[core_id]->response_time += (time - s->activeCores[core_id]->update_time);
-      s->activeCores[core_id]->update_time = time;
+      if(s->activeCores[core_id]->response_time == -1) {
+        int t = time + 1;
+        s->activeCores[core_id]->response_time = (t - s->activeCores[core_id]->arrival_time);
+      }
+      s->activeCores[core_id]->waiting_time += (time - s->activeCores[core_id]->preempted_time);
       printf("ANOTHER JOB IS GOING TO HOP ON CORE %d, WITH PID: %d",core_id,s->activeCores[core_id]->pid);
       return s->activeCores[core_id]->pid;
   }
@@ -366,16 +379,14 @@ int scheduler_quantum_expired(int core_id, int time)
     * update the remaining time for the job currently running on the core
     */
     set_time(time);
-
-    /*
-    * See if that job has completed running. If so, free it
-    */
     if(s->activeCores[core_id] == NULL) {
       return -1;
     }
     else{
+        s->activeCores[core_id]->preempted_time = time;
         priqueue_offer(&s->queue, s->activeCores[core_id]);
         s->activeCores[core_id] = priqueue_poll(&s->queue);
+        s->activeCores[core_id]->waiting_time += time - s->activeCores[core_id]->preempted_time;
         return s->activeCores[core_id]->pid;
     }
 }
@@ -390,8 +401,8 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-  fprintf(stderr, "wait time: %d", wait_time);
-  avgWaitTime = (float) (wait_time / completed_jobs);
+  fprintf(stderr, "wait time: %d\n", wait_time);
+  avgWaitTime =  ((float)wait_time / (float)completed_jobs);
   return avgWaitTime;
 }
 
@@ -405,7 +416,8 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-    avgTurnaroundTime = (float)turnaround_time/completed_jobs;
+    fprintf(stderr, "turnaround time: %d\n", turnaround_time);
+    avgTurnaroundTime = ((float)turnaround_time/(float)completed_jobs);
     return avgTurnaroundTime;
 }
 
@@ -419,7 +431,8 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
-  avgResponseTime = (float)(response_time / completed_jobs);
+  fprintf(stderr, "response time: %d\n", response_time);
+  avgResponseTime = ((float)response_time / (float)completed_jobs);
 	return avgResponseTime;
 }
 
